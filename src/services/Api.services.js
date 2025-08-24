@@ -10,7 +10,8 @@ const ApiRequests = {
     return { response, status: response.status };
   },
   signup: async (data) => {
-    const response = await api.post("/auth/", { ...data });
+    const response = await api.post("/auth/", data);
+    
     return { response, status: response.status };
   },
 };

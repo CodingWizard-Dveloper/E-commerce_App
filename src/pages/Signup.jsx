@@ -1,22 +1,112 @@
 import { Link } from "react-router-dom";
-import { User, Mail, Lock, UserRoundPen, AlertCircle } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  UserRoundPen,
+  AlertCircle,
+  Upload,
+  X,
+  Image,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { useState, useRef } from "react";
 import { checkAuth, signup } from "../slice/auth.slice";
 
 export default function Signup() {
   const dispatch = useDispatch();
-  const { token } = useSelector((state) => state.auth);
+  const [dragActive, setDragActive] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const fileInputRef = useRef(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm();
 
   const { userName, email, password } = errors;
 
+  // Handle drag events
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  // Handle drop event
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  // Handle file selection (following App.jsx pattern)
+  const handleFile = (file) => {
+    if (file && file.type.startsWith("image/")) {
+      setSelectedImage(file);
+      setValue("profileImage", file);
+
+      // Create preview using URL.createObjectURL (like App.jsx)
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Handle file input change
+  const handleFileInput = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  // Remove selected image
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setValue("profileImage", null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    // Clean up object URL to prevent memory leaks
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
+  };
+
   const onSubmit = (data) => {
-    dispatch(signup({ data }));
+    // Create FormData exactly like App.jsx pattern
+    const formData = new FormData();
+    formData.append("userName", data.userName);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+
+    // Append file with key name that multer expects (like "image" in App.jsx)
+    if (selectedImage) {
+      formData.append("profileImage", selectedImage); // backend should expect this key
+    }
+
+    console.log("Submitting FormData with:", {
+      userName: data.userName,
+      email: data.email,
+      password: "***",
+      hasImage: !!selectedImage,
+      imageType: selectedImage ? selectedImage.type : "none",
+      imageSize: selectedImage ? selectedImage.size : 0,
+    });
+
+    dispatch(signup({ data: formData }));
   };
 
   return (
@@ -27,6 +117,73 @@ export default function Signup() {
         </h2>
 
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+          {/* Profile Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-2">
+              Profile Image
+            </label>
+            <div
+              className={`relative border-2 border-dashed rounded-xl p-6 transition-all duration-200 cursor-pointer ${
+                dragActive
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileInput}
+                className="hidden"
+              />
+
+              {imagePreview ? (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage();
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="p-3 bg-gray-100 rounded-full">
+                      {dragActive ? (
+                        <Upload className="w-8 h-8 text-blue-500" />
+                      ) : (
+                        <Image className="w-8 h-8 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {dragActive
+                      ? "Drop your image here"
+                      : "Drag and drop an image here"}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    or click to browse files
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Name */}
           <div>
             <label
