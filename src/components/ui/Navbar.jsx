@@ -9,14 +9,14 @@ import {
   Transition,
 } from "@headlessui/react";
 import { Menu as BarsIcon, Bell as BellIcon, X } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
+import { logout } from "../../slice/auth.slice";
 
 const navigation = [
   { name: "Dashboard", href: "/" },
-  { name: "Team", href: "/team" },
-  { name: "Projects", href: "/projects" },
-  { name: "Calendar", href: "/calendar" },
+  { name: "Shops", href: "/shops" },
+  { name: "Products", href: "/products" },
 ];
 
 function classNames(...classes) {
@@ -25,10 +25,14 @@ function classNames(...classes) {
 
 export default function Navbar() {
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const location = useLocation();
 
   return (
-    <Disclosure as="nav" className="relative bg-gray-200/50 backdrop-blur-sm">
+    <Disclosure
+      as="nav"
+      className="relative bg-gray-200/50 backdrop-blur-sm z-50"
+    >
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-around">
           {/* Mobile menu button */}
@@ -120,7 +124,7 @@ export default function Navbar() {
                   leaveFrom="transform opacity-100 scale-100"
                   leaveTo="transform opacity-0 scale-95"
                 >
-                  <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-900 py-1 shadow-lg ring-1 ring-black/30 focus:outline-none">
+                  <MenuItems className="absolute right-0 z-[60] mt-2 w-48 origin-top-right rounded-md bg-gray-900 py-1 shadow-lg ring-1 ring-black/30 focus:outline-none">
                     <MenuItem>
                       {({ active }) => (
                         <Link
@@ -152,9 +156,9 @@ export default function Navbar() {
                         <button
                           className={classNames(
                             active ? "bg-gray-700/50" : "",
-                            "block w-full text-left px-4 py-2 text-sm text-gray-200"
+                            "block w-full text-left px-4 py-2 text-sm text-gray-200 cursor-pointer"
                           )}
-                          onClick={() => console.log("Sign out")}
+                          onClick={() => dispatch(logout())}
                         >
                           Sign out
                         </button>

@@ -1,14 +1,15 @@
 import { useEffect } from "react";
 import "./App.css";
-import Navbar from "./components/Navbar";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuth } from "./slice/auth.slice";
 import { Route, Routes } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Loader from "./components/Loader";
+import Loader from "./components/ui/Loader";
+import AppRoutes from "./Routes";
 
 import { GuestRoute, PrivateRoute } from "./config/restrictRoute";
+import Layout from "./components/layout";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -23,14 +24,13 @@ export default function App() {
   }
 
   return (
-    <>
-      <Navbar />
+    <Layout>
       <Routes>
         <Route
-          path="/"
+          path="/*"
           element={
             <PrivateRoute>
-              <h1>Hello</h1>
+              <AppRoutes />
             </PrivateRoute>
           }
         />
@@ -52,6 +52,6 @@ export default function App() {
           }
         />
       </Routes>
-    </>
+    </Layout>
   );
 }
