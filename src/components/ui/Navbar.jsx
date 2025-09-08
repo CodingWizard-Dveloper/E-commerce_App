@@ -8,7 +8,12 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import { Menu as BarsIcon, Bell as BellIcon, User2Icon, X } from "lucide-react";
+import {
+   ShoppingBag,
+  User2Icon,
+  X,
+  Menu as BarsIcon,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "../../slice/auth.slice";
@@ -37,10 +42,6 @@ export default function Navbar() {
 
   if (!userStore) {
     userActions.unshift({ name: "Create Store", href: "/createstore" });
-  }
-
-  if (userStore) {
-    userActions.push({ name: "Go to Store", href: `/store/${userStore._id}` });
   }
   return (
     <Disclosure
@@ -113,7 +114,7 @@ export default function Navbar() {
                 className="relative rounded-full p-1 text-gray-600 hover:text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <span className="sr-only">View notifications</span>
-                <BellIcon aria-hidden="true" className="size-6" />
+                <ShoppingBag aria-hidden="true" className="size-6" />
               </button>
 
               {/* Profile dropdown */}
@@ -162,11 +163,6 @@ export default function Navbar() {
               </Menu>
             </div>
           ) : (
-            // <img
-            //   alt={user?.name || "User avatar"}
-
-            //   className="size-8 rounded-full bg-gray-800"
-            // />
             <Link to={"/login"}>
               <User2Icon
                 className="border-2 border-gray-800 rounded-3xl"
