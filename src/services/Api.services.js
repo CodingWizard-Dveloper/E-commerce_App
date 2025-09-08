@@ -11,7 +11,12 @@ const ApiRequests = {
   },
   signup: async (data) => {
     const response = await api.post("/auth/", data);
-    
+
+    return { response, status: response.status };
+  },
+  createStore: async (data) => {
+    const response = await api.post("/auth/workspace", data);
+
     return { response, status: response.status };
   },
 };

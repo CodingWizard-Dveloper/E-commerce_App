@@ -1,25 +1,25 @@
-import { Link, Navigate } from "react-router-dom";
-import {
-  User,
-  Mail,
-  Lock,
-  UserRoundPen,
-  AlertCircle,
-  Upload,
-  X,
-  Image,
-} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Store, FileText, AlertCircle, Upload, X, Image } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { useState, useRef } from "react";
-import { checkAuth, signup } from "../slice/auth.slice";
+import { useState, useRef, useEffect } from "react";
+import { createStore, resetSignupFlag } from "../slice/auth.slice";
+// import { createStore } from "../slice/store.slice"; // <-- adjust path
 
-export default function Signup() {
+export default function CreateStore() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { justSignedUp, user } = useSelector((state) => state.auth);
+
   const [dragActive, setDragActive] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Reset the signup flag when component mounts
+  useEffect(() => {
+    dispatch(resetSignupFlag());
+  }, [dispatch]);
 
   const {
     register,
@@ -28,20 +28,17 @@ export default function Signup() {
     setValue,
   } = useForm();
 
-  const { userName, email, password } = errors;
+  const { storeName, description } = errors;
 
-  // Handle drag events
+  // Drag events
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
   };
 
-  // Handle drop event
+  // Drop
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -52,66 +49,51 @@ export default function Signup() {
     }
   };
 
-  // Handle file selection (following App.jsx pattern)
   const handleFile = (file) => {
     if (file && file.type.startsWith("image/")) {
       setSelectedImage(file);
-      setValue("profileImage", file);
-
-      // Create preview using URL.createObjectURL (like App.jsx)
+      setValue("storeImage", file);
       setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  // Handle file input change
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
   };
 
-  // Remove selected image
   const removeImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    setValue("profileImage", null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
-    // Clean up object URL to prevent memory leaks
-    if (imagePreview && imagePreview.startsWith("blob:")) {
-      URL.revokeObjectURL(imagePreview);
-    }
+    setValue("storeImage", null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (imagePreview?.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
   };
 
   const onSubmit = (data) => {
-    // Create FormData exactly like App.jsx pattern
     const formData = new FormData();
-    formData.append("userName", data.userName);
-    formData.append("email", data.email);
-    formData.append("password", data.password);
+    formData.append("storeName", data.storeName);
+    formData.append("description", data.description);
+    if (selectedImage) formData.append("storeImage", selectedImage);
+    formData.append("ownerId", user?._id);
 
-    // Append file with key name that multer expects (like "image" in App.jsx)
-    if (selectedImage) {
-      formData.append("profileImage", selectedImage); // backend should expect this key
-    }
-
-    dispatch(signup({ data: formData }));
+    dispatch(createStore({ data: formData }));
+    navigate("/");
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-purple-200">
       <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Create Account <User strokeWidth={2.75} className="inline ml-1" />
+          Create Store <Store strokeWidth={2.75} className="inline ml-1" />
         </h2>
 
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-          {/* Profile Image */}
+          {/* Store Image */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
-              Profile Image
+              Store Image
             </label>
             <div
               className={`relative border-2 border-dashed rounded-xl p-6 transition-all duration-200 cursor-pointer ${
@@ -164,7 +146,7 @@ export default function Signup() {
                   </div>
                   <p className="text-gray-600 text-sm mb-2">
                     {dragActive
-                      ? "Drop your image here"
+                      ? "Drop your store image here"
                       : "Drag and drop an image here"}
                   </p>
                   <p className="text-gray-400 text-xs">
@@ -175,132 +157,95 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* Name */}
+          {/* Store Name */}
           <div>
             <label
               className={`block text-sm font-medium ${
-                userName ? "text-red-600" : "text-gray-600"
+                storeName ? "text-red-600" : "text-gray-600"
               }`}
             >
-              Name
+              Store Name
             </label>
             <div
               className={`flex items-center border rounded-xl mt-1 px-3 ${
-                userName ? "border-red-500" : "border-gray-300"
+                storeName ? "border-red-500" : "border-gray-300"
               }`}
             >
-              <UserRoundPen
+              <Store
                 className={`w-5 h-5 ${
-                  userName ? "text-red-500" : "text-gray-400"
+                  storeName ? "text-red-500" : "text-gray-400"
                 }`}
               />
               <input
                 type="text"
-                placeholder="John Doe"
+                placeholder="My Awesome Store"
                 className="w-full px-3 py-2 focus:outline-none rounded-xl"
-                {...register("userName", { required: "userName is required" })}
-              />
-            </div>
-            {userName && (
-              <span className="flex items-center gap-1 mt-1 text-sm font-medium text-red-600 animate-fade-in">
-                <AlertCircle className="w-4 h-4" />
-                {userName.message}
-              </span>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label
-              className={`block text-sm font-medium ${
-                email ? "text-red-600" : "text-gray-600"
-              }`}
-            >
-              Email
-            </label>
-            <div
-              className={`flex items-center border rounded-xl mt-1 px-3 ${
-                email ? "border-red-500" : "border-gray-300"
-              }`}
-            >
-              <Mail
-                className={`w-5 h-5 ${
-                  email ? "text-red-500" : "text-gray-400"
-                }`}
-              />
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full px-3 py-2 focus:outline-none rounded-xl"
-                {...register("email", { required: "Email is required" })}
-              />
-            </div>
-            {email && (
-              <span className="flex items-center gap-1 mt-1 text-sm font-medium text-red-600 animate-fade-in">
-                <AlertCircle className="w-4 h-4" />
-                {email.message}
-              </span>
-            )}
-          </div>
-
-          {/* Password */}
-          <div>
-            <label
-              className={`block text-sm font-medium ${
-                password ? "text-red-600" : "text-gray-600"
-              }`}
-            >
-              Password
-            </label>
-            <div
-              className={`flex items-center border rounded-xl mt-1 px-3 ${
-                password ? "border-red-500" : "border-gray-300"
-              }`}
-            >
-              <Lock
-                className={`w-5 h-5 ${
-                  password ? "text-red-500" : "text-gray-400"
-                }`}
-              />
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full px-3 py-2 focus:outline-none rounded-xl"
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
+                {...register("storeName", {
+                  required: "Store name is required",
                 })}
               />
             </div>
-            {password && (
+            {storeName && (
               <span className="flex items-center gap-1 mt-1 text-sm font-medium text-red-600 animate-fade-in">
                 <AlertCircle className="w-4 h-4" />
-                {password.message}
+                {storeName.message}
               </span>
             )}
           </div>
 
-          {/* Button */}
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-xl hover:bg-blue-600 active:scale-95 transition transform shadow-md"
-          >
-            Sign Up
-          </button>
-        </form>
+          {/* Description */}
+          <div>
+            <label
+              className={`block text-sm font-medium ${
+                description ? "text-red-600" : "text-gray-600"
+              }`}
+            >
+              Description
+            </label>
+            <div
+              className={`flex items-start border rounded-xl mt-1 px-3 py-2 ${
+                description ? "border-red-500" : "border-gray-300"
+              }`}
+            >
+              <FileText
+                className={`w-5 h-5 mt-1 ${
+                  description ? "text-red-500" : "text-gray-400"
+                }`}
+              />
+              <textarea
+                placeholder="Write about your store..."
+                rows="3"
+                className="w-full px-3 py-1 focus:outline-none rounded-xl resize-none"
+                {...register("description", {
+                  required: "Description is required",
+                })}
+              />
+            </div>
+            {description && (
+              <span className="flex items-center gap-1 mt-1 text-sm font-medium text-red-600 animate-fade-in">
+                <AlertCircle className="w-4 h-4" />
+                {description.message}
+              </span>
+            )}
+          </div>
 
-        <p className="mt-6 text-sm text-center text-gray-600">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-blue-500 font-medium hover:underline"
-          >
-            Login
-          </Link>
-        </p>
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-xl hover:bg-gray-300 active:scale-95 transition transform shadow-md"
+            >
+              {justSignedUp ? "Skip" : "Cancel"}
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-blue-500 text-white py-2 rounded-xl hover:bg-blue-600 active:scale-95 transition transform shadow-md"
+            >
+              Create Store
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

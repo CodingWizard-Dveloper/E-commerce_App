@@ -20,11 +20,21 @@ export const signup = createAsyncThunk("Auth/singup", async ({ data }) => {
   return { res: response.data, status };
 });
 
+export const createStore = createAsyncThunk(
+  "Auth/CreateStore",
+  async ({ data }) => {
+    const { response, status } = await ApiRequests.createStore(data);
+
+    return { res: response.data, status };
+  }
+);
+
 const initialState = {
   user: null,
-  loading: { bool: false, message: "" },
+  loading: { bool: true, message: "" },
   error: null,
   token: null,
+  justSignedUp: false,
 };
 
 const authSlice = createSlice({
@@ -35,6 +45,10 @@ const authSlice = createSlice({
       localStorage.removeItem("token");
       state.user = null;
       state.token = null;
+      state.justSignedUp = false;
+    },
+    resetSignupFlag: (state) => {
+      state.justSignedUp = false;
     },
   },
   extraReducers: (builder) => {
@@ -57,6 +71,7 @@ const authSlice = createSlice({
           // Authentication failed
           state.user = null;
           state.error = action.payload.res.message || "Authentication failed";
+          state.justSignedUp = false;
           // Clear token from localStorage if auth check fails
           localStorage.removeItem("token");
         }
@@ -76,6 +91,7 @@ const authSlice = createSlice({
           state.user = action.payload.res.user;
           state.error = null;
           state.token = action.payload.res.token;
+          state.justSignedUp = false; // Reset signup flag for login
           localStorage.setItem("token", action.payload.res.token);
         } else {
           // Login failed
@@ -89,6 +105,7 @@ const authSlice = createSlice({
       .addCase(signup.fulfilled, (state, action) => {
         const isError = checkStatus(action.payload.status);
         state.loading = { ...state.loading, bool: false };
+        state.justSignedUp = true;
 
         if (!isError && action.payload.res.token) {
           // Signup successful
@@ -100,9 +117,26 @@ const authSlice = createSlice({
           // Signup failed
           state.error = action.payload.res.message || "Signup failed";
         }
+      })
+
+      .addCase(createStore.pending, (state, action) => {
+        state.loading = { bool: true, message: "Creating Store" };
+      })
+
+      .addCase(createStore.fulfilled, (state, action) => {
+        const isError = checkStatus(action.payload.status);
+        state.loading = { ...state.loading, bool: false };
+        state.justSignedUp = false;
+
+        if (!isError && action.payload.res.token) {
+          state.user = action.payload.res.user;
+          state.error = null;
+        } else {
+          state.error = action.payload.res.message || "Signup failed";
+        }
       });
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, resetSignupFlag } = authSlice.actions;
 export default authSlice.reducer;

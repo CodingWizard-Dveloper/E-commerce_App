@@ -2,12 +2,11 @@ import { Link } from "react-router-dom";
 import { Mail, Lock, AlertCircle, Handshake } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { checkAuth, login } from "../slice/auth.slice";
-import { useCallback } from "react";
+import { login } from "../slice/auth.slice";
 
 export default function Login() {
   const dispatch = useDispatch();
-  const { token, error } = useSelector((state) => state.auth);
+  const { error } = useSelector((state) => state.auth);
   const {
     register,
     handleSubmit,

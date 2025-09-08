@@ -27,7 +27,21 @@ export default function Navbar() {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const location = useLocation();
+  const userStore = user?.store;
+  
+  const userActions = [
+    { name: "Your Profile", href: "/profile" },
+    { name: "Settings", href: "/settings" },
+    { name: "Logout", fn: () => dispatch(logout()) },
+  ];
+  
+  if (!userStore) {
+    userActions.unshift({ name: "Create Store", href: "/createstore" });
+  }
 
+  if (userStore) {
+    userActions.push({ name: "Go to Store", href: `/store/${userStore._id}` });
+  }
   return (
     <Disclosure
       as="nav"
@@ -36,7 +50,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-around">
           {/* Mobile menu button */}
-          {user && (
+          {user && location.pathname !== "/createstore" && (
             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
               <DisclosureButton className="group inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-300/30 hover:text-black focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <span className="sr-only">Open main menu</span>
@@ -64,7 +78,7 @@ export default function Navbar() {
           </div>
 
           {/* Navigation Links */}
-          {user && (
+          {user && location.pathname !== "/createstore" && (
             <div className="hidden sm:ml-6 sm:block">
               <div className="flex space-x-4">
                 {navigation.map((item) => {
@@ -125,45 +139,24 @@ export default function Navbar() {
                   leaveTo="transform opacity-0 scale-95"
                 >
                   <MenuItems className="absolute right-0 z-[60] mt-2 w-48 origin-top-right rounded-md bg-gray-900 py-1 shadow-lg ring-1 ring-black/30 focus:outline-none">
-                    <MenuItem>
-                      {({ active }) => (
-                        <Link
-                          to="/profile"
-                          className={classNames(
-                            active ? "bg-gray-700/50" : "",
-                            "block px-4 py-2 text-sm text-gray-200"
-                          )}
-                        >
-                          Your Profile
-                        </Link>
-                      )}
-                    </MenuItem>
-                    <MenuItem>
-                      {({ active }) => (
-                        <Link
-                          to="/settings"
-                          className={classNames(
-                            active ? "bg-gray-700/50" : "",
-                            "block px-4 py-2 text-sm text-gray-200"
-                          )}
-                        >
-                          Settings
-                        </Link>
-                      )}
-                    </MenuItem>
-                    <MenuItem>
-                      {({ active }) => (
-                        <button
-                          className={classNames(
-                            active ? "bg-gray-700/50" : "",
-                            "block w-full text-left px-4 py-2 text-sm text-gray-200 cursor-pointer"
-                          )}
-                          onClick={() => dispatch(logout())}
-                        >
-                          Sign out
-                        </button>
-                      )}
-                    </MenuItem>
+                    {userActions?.map((action) => (
+                      <MenuItem key={action.name}>
+                        {({ active }) => (
+                          <Link
+                            to={action.href}
+                            className={classNames(
+                              active ? "bg-gray-700/50" : "",
+                              "block px-4 py-2 text-sm text-gray-200"
+                            )}
+                            {...(action?.fn
+                              ? { onClick: () => action.fn() }
+                              : {})}
+                          >
+                            {action.name}
+                          </Link>
+                        )}
+                      </MenuItem>
+                    ))}
                   </MenuItems>
                 </Transition>
               </Menu>
@@ -173,7 +166,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Navigation */}
-      {user && (
+      {(user || !location.pathname === "createstore") && (
         <DisclosurePanel className="sm:hidden">
           <div className="space-y-1 px-2 pt-2 pb-3">
             {navigation.map((item) => {

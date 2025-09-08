@@ -13,7 +13,7 @@ import Layout from "./components/layout";
 
 export default function App() {
   const dispatch = useDispatch();
-  const { loading, token } = useSelector((state) => state.auth);
+  const { loading, token, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(checkAuth());
