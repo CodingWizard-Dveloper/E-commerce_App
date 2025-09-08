@@ -10,10 +10,11 @@ import AppRoutes from "./Routes";
 
 import { GuestRoute, PrivateRoute } from "./config/restrictRoute";
 import Layout from "./components/layout";
+import Home from "./pages/Home";
 
 export default function App() {
   const dispatch = useDispatch();
-  const { loading, token, user } = useSelector((state) => state.auth);
+  const { loading, token } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(checkAuth());
@@ -26,6 +27,7 @@ export default function App() {
   return (
     <Layout>
       <Routes>
+        <Route index element={<Home />} />
         <Route
           path="/*"
           element={

@@ -8,7 +8,7 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import { Menu as BarsIcon, Bell as BellIcon, X } from "lucide-react";
+import { Menu as BarsIcon, Bell as BellIcon, User2Icon, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "../../slice/auth.slice";
@@ -28,13 +28,13 @@ export default function Navbar() {
   const dispatch = useDispatch();
   const location = useLocation();
   const userStore = user?.store;
-  
+
   const userActions = [
     { name: "Your Profile", href: "/profile" },
     { name: "Settings", href: "/settings" },
     { name: "Logout", fn: () => dispatch(logout()) },
   ];
-  
+
   if (!userStore) {
     userActions.unshift({ name: "Create Store", href: "/createstore" });
   }
@@ -105,7 +105,7 @@ export default function Navbar() {
           {/* </div> */}
 
           {/* Right Section: Notifications + User Menu */}
-          {user && (
+          {user ? (
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
               {/* Notifications */}
               <button
@@ -161,6 +161,19 @@ export default function Navbar() {
                 </Transition>
               </Menu>
             </div>
+          ) : (
+            // <img
+            //   alt={user?.name || "User avatar"}
+
+            //   className="size-8 rounded-full bg-gray-800"
+            // />
+            <Link to={"/login"}>
+              <User2Icon
+                className="border-2 border-gray-800 rounded-3xl"
+                color="#1e2939"
+                size={30}
+              />
+            </Link>
           )}
         </div>
       </div>

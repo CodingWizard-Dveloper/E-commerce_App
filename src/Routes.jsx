@@ -8,7 +8,6 @@ const AppRoutes = () => {
   const { user } = useSelector((state) => state.auth);
   return (
     <Routes>
-      <Route index element={<Home />} />
       {user?.storeId ? (
         <Route path="/createstore" element={<Navigate to="/" replace />} />
       ) : (
