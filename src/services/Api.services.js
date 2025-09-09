@@ -6,7 +6,7 @@ const ApiRequests = {
     return { response, status: response.status };
   },
   login: async (data) => {
-    const response = await api.patch("/auth/", { ...data });
+    const response = await api.post("/auth/login", { ...data });
     return { response, status: response.status };
   },
   signup: async (data) => {
@@ -16,6 +16,11 @@ const ApiRequests = {
   },
   createStore: async (data) => {
     const response = await api.post("/auth/workspace", data);
+
+    return { response, status: response.status };
+  },
+  changeUser: async (data) => {
+    const response = await api.patch("/auth/", data);
 
     return { response, status: response.status };
   },

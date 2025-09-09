@@ -1,11 +1,28 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Settings, LogOut, Star, Camera, X, User2Icon } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { changeUser, checkAuth } from "../slice/auth.slice";
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("orders");
 
-  const { user: defaultUser } = useSelector((state) => state.auth);
+  const { user: defaultUser, error } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isDirty },
+  } = useForm({
+    defaultValues: {
+      name: defaultUser?.userName || "",
+      email: defaultUser?.email || "",
+      avatar: defaultUser?.avatar || "",
+    },
+  });
 
   const [user, setUser] = useState({
     name: defaultUser?.userName,
@@ -13,6 +30,13 @@ export default function Profile() {
     avatar: defaultUser?.avatar,
     joined: defaultUser?.createdAt,
   });
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imageChanged, setImageChanged] = useState(false);
+  const watchedValues = watch();
+
+  // Check if form is modified (including image changes)
+  const isFormModified = isDirty || imageChanged;
 
   const formattedDate = new Date(user.joined).toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -37,39 +61,58 @@ export default function Profile() {
     },
   ];
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUser((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setSelectedFile(file); // Store the actual file
+      setImageChanged(true); // Mark as changed
       const imageUrl = URL.createObjectURL(file);
+      setValue("avatar", imageUrl);
       setUser((prev) => ({ ...prev, avatar: imageUrl }));
     }
   };
 
   const handleRemoveImage = () => {
+    setSelectedFile(null); // Clear the file
+    setImageChanged(true); // Mark as changed
+    setValue("avatar", "");
     setUser((prev) => ({ ...prev, avatar: "" }));
   };
 
-  // check if user is modified compared to default
-  const isModified =
-    user.name !== defaultUser?.userName ||
-    user.email !== defaultUser?.email ||
-    user.avatar !== defaultUser?.avatar;
+  const onSubmit = (data) => {
+    const formData = new FormData();
+
+    formData.append("userName", data.name);
+    formData.append("email", data.email);
+
+    // Only append the file if a new one was selected
+    if (selectedFile) {
+      formData.append("profileImage", selectedFile);
+    }
+
+    dispatch(
+      changeUser({
+        data: formData,
+        callBack: () => {
+          dispatch(checkAuth());
+          // Reset the image changed state after successful update
+          setImageChanged(false);
+        },
+      })
+    );
+  };
 
   return (
     <div className="bg-gray-100/50 min-h-screen">
       {/* Profile Header */}
       <section className="relative bg-gray-200/50 backdrop-blur-sm">
+        {error && <h1 className="block text-red-500 mx-50 -py-3"> {error} </h1>}
         <div className="mx-auto max-w-7xl px-6 py-8 flex flex-col sm:flex-row gap-6 items-center">
           {/* Avatar */}
           <div className="relative group -top-4 w-28 h-28">
-            {user?.avatar ? (
+            {watchedValues?.avatar ? (
               <img
-                src={user.avatar || "/profile/default-avatar.png"}
+                src={watchedValues.avatar || "/profile/default-avatar.png"}
                 className="h-28 w-28 rounded-full object-cover border-4 border-indigo-600 shadow"
               />
             ) : (
@@ -92,7 +135,7 @@ export default function Profile() {
               />
             </label>
             {/* Remove button */}
-            {user.avatar && (
+            {watchedValues.avatar && (
               <button
                 onClick={handleRemoveImage}
                 className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-red-600 text-white text-xs px-2 py-1 rounded-lg shadow hover:bg-red-700 transition"
@@ -103,29 +146,67 @@ export default function Profile() {
           </div>
 
           {/* Editable Fields */}
-          <div className="flex flex-col gap-3 items-center sm:items-start">
-            <input
-              type="text"
-              name="name"
-              value={user.name}
-              onChange={handleInputChange}
-              className="rounded-lg border px-3 py-2 w-64"
-            />
-            <input
-              type="email"
-              name="email"
-              value={user.email}
-              onChange={handleInputChange}
-              className="rounded-lg border px-3 py-2 w-64"
-            />
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-3 items-center sm:items-start"
+          >
+            <div className="flex flex-col">
+              <input
+                type="text"
+                {...register("name", {
+                  required: "Name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Name must be at least 2 characters",
+                  },
+                })}
+                className={`rounded-lg border px-3 py-2 w-64 ${
+                  errors.name ? "border-red-500" : "border-gray-500"
+                }`}
+                placeholder="Enter your name"
+              />
+              {errors.name && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.name.message}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              <input
+                type="email"
+                disabled
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                })}
+                className={`rounded-lg border px-3 py-2 w-64 bg-gray-100 cursor-not-allowed ${
+                  errors.email ? "border-red-500" : "border-gray-500"
+                }`}
+                placeholder="Enter your email"
+              />
+              {errors.email && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.email.message}
+                </span>
+              )}
+            </div>
+
             <p className="text-sm text-gray-500">Joined {formattedDate}</p>
-          </div>
-          {/* Show save button only if modified */}
-          {isModified && (
-            <button className="mt-1 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">
-              Save
-            </button>
-          )}
+
+            {/* Show save button only if modified */}
+            {isFormModified && (
+              <button
+                type="submit"
+                className="mt-1 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+              >
+                Save
+              </button>
+            )}
+          </form>
         </div>
       </section>
 

@@ -29,6 +29,15 @@ export const createStore = createAsyncThunk(
   }
 );
 
+export const changeUser = createAsyncThunk(
+  "Auth/changeUser",
+  async ({ data, callBack }) => {
+    const { response, status } = await ApiRequests.changeUser(data);
+
+    return { res: response.data, status };
+  }
+);
+
 const initialState = {
   user: null,
   loading: { bool: true, message: "" },
@@ -133,6 +142,22 @@ const authSlice = createSlice({
           state.error = null;
         } else {
           state.error = action.payload.res.message || "Signup failed";
+        }
+      })
+      .addCase(changeUser.pending, (state, _) => {
+        state.loading = { bool: true, message: "Updating user" };
+      })
+
+      .addCase(changeUser.fulfilled, (state, action) => {
+        state.loading = { ...state.loading, bool: false };
+        const isError = checkStatus(action.payload.status);
+
+        if (!isError) {
+          state.error = null;
+          state.user = action.payload.res.user;
+        } else {
+          state.error =
+            action.payload.res.message || "Data change failed failed";
         }
       });
   },
