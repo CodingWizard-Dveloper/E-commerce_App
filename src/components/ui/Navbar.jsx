@@ -8,12 +8,7 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import {
-   ShoppingBag,
-  User2Icon,
-  X,
-  Menu as BarsIcon,
-} from "lucide-react";
+import { ShoppingBag, User2Icon, X, Menu as BarsIcon } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "../../slice/auth.slice";
@@ -74,6 +69,7 @@ export default function Navbar() {
                 alt="Your Company"
                 src="/logo.png"
                 className="h-full w-auto mix-blend-color-burn"
+                loading="lazy"
               />
             </Link>
           </div>
@@ -121,14 +117,19 @@ export default function Navbar() {
               <Menu as="div" className="relative ml-3">
                 <MenuButton className="relative flex rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <span className="sr-only">Open user menu</span>
-                  <img
-                    alt={user?.name || "User avatar"}
-                    src={
-                      user?.avatar ||
-                      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    }
-                    className="size-8 rounded-full bg-gray-800"
-                  />
+                  {user?.avatar ? (
+                    <img
+                      alt={user?.name || "User avatar"}
+                      src={user?.avatar}
+                      className="size-8 rounded-full bg-gray-800"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <User2Icon
+                      className=" rounded-full object-cover border-2 border-indigo-600 shadow inline-block"
+                      color="#4f39f6"
+                    />
+                  )}
                 </MenuButton>
 
                 <Transition

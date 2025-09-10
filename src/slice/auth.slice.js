@@ -50,11 +50,13 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: (state, action) => {
-      localStorage.removeItem("token");
+    logout: (state) => {
       state.user = null;
       state.token = null;
-      state.justSignedUp = false;
+      state.error = null;
+      state.loading = { bool: false, message: "" };
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
     },
     resetSignupFlag: (state) => {
       state.justSignedUp = false;
@@ -83,6 +85,7 @@ const authSlice = createSlice({
           state.justSignedUp = false;
           // Clear token from localStorage if auth check fails
           localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
         }
 
         state.loading = { ...state.loading, bool: false };
@@ -102,6 +105,10 @@ const authSlice = createSlice({
           state.token = action.payload.res.token;
           state.justSignedUp = false; // Reset signup flag for login
           localStorage.setItem("token", action.payload.res.token);
+          // Store refresh token if provided
+          if (action.payload.res.refreshToken) {
+            localStorage.setItem("refreshToken", action.payload.res.refreshToken);
+          }
         } else {
           // Login failed
           state.error = action.payload.res.message || "Login failed";

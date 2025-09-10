@@ -24,6 +24,10 @@ const ApiRequests = {
 
     return { response, status: response.status };
   },
+  refreshToken: async (refreshToken) => {
+    const response = await api.post("/auth/refresh", { refreshToken });
+    return { response, status: response.status };
+  },
 };
 
 export default ApiRequests;

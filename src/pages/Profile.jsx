@@ -86,9 +86,7 @@ export default function Profile() {
     formData.append("email", data.email);
 
     // Only append the file if a new one was selected
-    if (selectedFile) {
-      formData.append("profileImage", selectedFile);
-    }
+    formData.append("profileImage", selectedFile ?? user?.avatar);
 
     dispatch(
       changeUser({
@@ -112,8 +110,9 @@ export default function Profile() {
           <div className="relative group -top-4 w-28 h-28">
             {watchedValues?.avatar ? (
               <img
-                src={watchedValues.avatar || "/profile/default-avatar.png"}
+                src={watchedValues.avatar || "/profile/default-avatar.png"} 
                 className="h-28 w-28 rounded-full object-cover border-4 border-indigo-600 shadow"
+                loading="lazy"
               />
             ) : (
               <>
@@ -250,6 +249,7 @@ export default function Profile() {
                     src={order.img}
                     alt={order.name}
                     className="h-40 w-full object-cover rounded-lg"
+                    loading="lazy"
                   />
                   <h3 className="mt-4 font-semibold text-gray-900">
                     {order.name}
