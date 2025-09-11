@@ -32,7 +32,7 @@ export default function App() {
           path="/*"
           element={
             <PrivateRoute>
-              <AppRoutes />
+            <AppRoutes />
             </PrivateRoute>
           }
         />

@@ -1,15 +1,37 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Settings, LogOut, Star, Camera, X, User2Icon } from "lucide-react";
+import {
+  Settings,
+  LogOut,
+  Star,
+  Camera,
+  X,
+  User2Icon,
+  Trash2,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { changeUser, checkAuth } from "../slice/auth.slice";
+import {
+  changeUser,
+  checkAuth,
+  deleteStore,
+  logout,
+} from "../slice/auth.slice";
+import { useParams } from "react-router-dom";
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState("orders");
-
+  const { tab } = useParams();
+  const [activeTab, setActiveTab] = useState(tab ?? "orders");
   const { user: defaultUser, error } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imageChanged, setImageChanged] = useState(false);
+  const [user, setUser] = useState({
+    name: defaultUser?.userName,
+    email: defaultUser?.email,
+    avatar: defaultUser?.avatar,
+    joined: defaultUser?.createdAt,
+  });
   const {
     register,
     handleSubmit,
@@ -23,18 +45,7 @@ export default function Profile() {
       avatar: defaultUser?.avatar || "",
     },
   });
-
-  const [user, setUser] = useState({
-    name: defaultUser?.userName,
-    email: defaultUser?.email,
-    avatar: defaultUser?.avatar,
-    joined: defaultUser?.createdAt,
-  });
-
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [imageChanged, setImageChanged] = useState(false);
   const watchedValues = watch();
-
   // Check if form is modified (including image changes)
   const isFormModified = isDirty || imageChanged;
 
@@ -60,6 +71,16 @@ export default function Profile() {
       rating: "4.2",
     },
   ];
+
+  const userTabs = [
+    { id: "orders", label: "Orders" },
+    { id: "wishlist", label: "Wishlist" },
+    { id: "settings", label: "Settings" },
+  ];
+
+  if (defaultUser?.store) {
+    userTabs.splice(2, 0, { id: "ManageStore", label: "Manage store" });
+  }
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -110,7 +131,7 @@ export default function Profile() {
           <div className="relative group -top-4 w-28 h-28">
             {watchedValues?.avatar ? (
               <img
-                src={watchedValues.avatar || "/profile/default-avatar.png"} 
+                src={watchedValues.avatar || "/profile/default-avatar.png"}
                 className="h-28 w-28 rounded-full object-cover border-4 border-indigo-600 shadow"
                 loading="lazy"
               />
@@ -210,13 +231,9 @@ export default function Profile() {
       </section>
 
       {/* Tabs */}
-      <section className="mx-auto max-w-7xl px-6 mt-6">
-        <div className="flex space-x-2 border-b">
-          {[
-            { id: "orders", label: "Orders" },
-            { id: "wishlist", label: "Wishlist" },
-            { id: "settings", label: "Settings" },
-          ].map((tab) => (
+      <section className="mx-auto max-w-7xl mt-6 flex">
+        <div className="flex space-x-2 border-b w-full">
+          {userTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -270,22 +287,45 @@ export default function Profile() {
             </div>
           </div>
         )}
-
         {activeTab === "wishlist" && (
           <div className="text-center text-gray-600">
             Your wishlist is empty.
           </div>
         )}
-
         {activeTab === "settings" && (
           <div className="flex flex-col gap-4">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition w-fit">
-              <Settings className="h-5 w-5" /> Account Settings
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition w-fit">
+            <button
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition w-fit cursor-pointer"
+              onClick={() => dispatch(logout())}
+            >
               <LogOut className="h-5 w-5" /> Logout
             </button>
           </div>
+        )}
+        {activeTab === "ManageStore" && (
+          <>
+            <div className="flex flex-col gap-4">
+              <button
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition w-fit cursor-pointer"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Do you want to delete your store this action is reversible? "
+                    )
+                  ) {
+                    dispatch(
+                      deleteStore({
+                        storeId: defaultUser?.store?._id,
+                        callBack: () => dispatch(checkAuth()),
+                      })
+                    );
+                  }
+                }}
+              >
+                <Trash2 className="h-5 w-5" /> Delete Your store
+              </button>
+            </div>
+          </>
         )}
       </section>
     </div>

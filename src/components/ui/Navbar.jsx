@@ -31,7 +31,7 @@ export default function Navbar() {
 
   const userActions = [
     { name: "Your Profile", href: "/profile" },
-    { name: "Settings", href: "/settings" },
+    { name: "Settings", href: "/profile/settings" },
     { name: "Logout", fn: () => dispatch(logout()) },
   ];
 

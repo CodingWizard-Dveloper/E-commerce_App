@@ -38,6 +38,17 @@ export const changeUser = createAsyncThunk(
   }
 );
 
+export const deleteStore = createAsyncThunk(
+  "Auth/DeleteStore",
+  async (data) => {
+    const { response, status } = await ApiRequests.deleteStore(data.storeId);
+
+    if(data.callBack && response) data.callBack()
+
+    return { res: response.data, status };
+  }
+);
+
 const initialState = {
   user: null,
   loading: { bool: true, message: "" },
@@ -107,7 +118,10 @@ const authSlice = createSlice({
           localStorage.setItem("token", action.payload.res.token);
           // Store refresh token if provided
           if (action.payload.res.refreshToken) {
-            localStorage.setItem("refreshToken", action.payload.res.refreshToken);
+            localStorage.setItem(
+              "refreshToken",
+              action.payload.res.refreshToken
+            );
           }
         } else {
           // Login failed
@@ -138,7 +152,6 @@ const authSlice = createSlice({
       .addCase(createStore.pending, (state, action) => {
         state.loading = { bool: true, message: "Creating Store" };
       })
-
       .addCase(createStore.fulfilled, (state, action) => {
         const isError = checkStatus(action.payload.status);
         state.loading = { ...state.loading, bool: false };
@@ -151,10 +164,10 @@ const authSlice = createSlice({
           state.error = action.payload.res.message || "Signup failed";
         }
       })
+
       .addCase(changeUser.pending, (state, _) => {
         state.loading = { bool: true, message: "Updating user" };
       })
-
       .addCase(changeUser.fulfilled, (state, action) => {
         state.loading = { ...state.loading, bool: false };
         const isError = checkStatus(action.payload.status);
@@ -163,8 +176,21 @@ const authSlice = createSlice({
           state.error = null;
           state.user = action.payload.res.user;
         } else {
-          state.error =
-            action.payload.res.message || "Data change failed failed";
+          state.error = action.payload.res.message || "Data change failed";
+        }
+      })
+
+      .addCase(deleteStore.pending, (state, _) => {
+        state.loading = { bool: true, message: "Deleting store" };
+      })
+      .addCase(deleteStore.fulfilled, (state, action) => {
+        state.loading = { ...state.loading, bool: false };
+        const isError = checkStatus(action.payload.status);
+
+        if (!isError) {
+          state.error = null;
+        } else {
+          state.error = action.payload.res.message || "Error deleting store";
         }
       });
   },

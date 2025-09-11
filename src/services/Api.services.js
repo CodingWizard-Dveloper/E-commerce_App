@@ -28,6 +28,11 @@ const ApiRequests = {
     const response = await api.post("/auth/refresh", { refreshToken });
     return { response, status: response.status };
   },
+  deleteStore: async (data) => {
+    console.log("🚀 ~ data:", data);
+    const response = await api.delete("/auth/workspace", { data });
+    return { response, status: response.status };
+  },
 };
 
 export default ApiRequests;
