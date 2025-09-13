@@ -31,7 +31,7 @@ export const createStore = createAsyncThunk(
 
 export const changeUser = createAsyncThunk(
   "Auth/changeUser",
-  async ({ data, callBack }) => {
+  async ({ data }) => {
     const { response, status } = await ApiRequests.changeUser(data);
 
     return { res: response.data, status };
@@ -43,7 +43,7 @@ export const deleteStore = createAsyncThunk(
   async (data) => {
     const { response, status } = await ApiRequests.deleteStore(data.storeId);
 
-    if(data.callBack && response) data.callBack()
+    if (data.callBack && response) data.callBack();
 
     return { res: response.data, status };
   }
@@ -55,6 +55,7 @@ const initialState = {
   error: null,
   token: null,
   justSignedUp: false,
+  success: null,
 };
 
 const authSlice = createSlice({
@@ -81,12 +82,14 @@ const authSlice = createSlice({
       .addCase(checkAuth.fulfilled, (state, action) => {
         let isErrorStatus = false;
 
+        state.loading = { ...state.loading, bool: false };
         if (action.payload.status !== 401) {
           isErrorStatus = checkStatus(action.payload.status);
         }
 
         if (!isErrorStatus) {
           // Authentication successful
+          state.success = false;
           state.user = action.payload.res.user;
           state.error = state.error;
         } else {
@@ -94,12 +97,14 @@ const authSlice = createSlice({
           state.user = null;
           state.error = action.payload.res.message || "Authentication failed";
           state.justSignedUp = false;
+          state.success = true;
           // Clear token from localStorage if auth check fails
           localStorage.removeItem("token");
           localStorage.removeItem("refreshToken");
         }
-
-        state.loading = { ...state.loading, bool: false };
+      })
+      .addCase(checkAuth.rejected, (state, _) => {
+        state.loading = { ...state, bool: false };
       })
 
       .addCase(login.pending, (state) => {
@@ -111,6 +116,7 @@ const authSlice = createSlice({
 
         if (!isError && action.payload.res.token) {
           // Login successful
+          state.success = true;
           state.user = action.payload.res.user;
           state.error = null;
           state.token = action.payload.res.token;
@@ -125,6 +131,7 @@ const authSlice = createSlice({
           }
         } else {
           // Login failed
+          state.success = false;
           state.error = action.payload.res.message || "Login failed";
         }
       })
@@ -143,8 +150,10 @@ const authSlice = createSlice({
           state.error = null;
           state.token = action.payload.res.token;
           localStorage.setItem("token", action.payload.res.token);
+          state.success = true;
         } else {
           // Signup failed
+          state.success = false;
           state.error = action.payload.res.message || "Signup failed";
         }
       })
@@ -158,9 +167,11 @@ const authSlice = createSlice({
         state.justSignedUp = false;
 
         if (!isError && action.payload.res.token) {
+          state.success = true;
           state.user = action.payload.res.user;
           state.error = null;
         } else {
+          state.success = false;
           state.error = action.payload.res.message || "Signup failed";
         }
       })
@@ -173,9 +184,11 @@ const authSlice = createSlice({
         const isError = checkStatus(action.payload.status);
 
         if (!isError) {
+          state.success = true;
           state.error = null;
           state.user = action.payload.res.user;
         } else {
+          state.success = false;
           state.error = action.payload.res.message || "Data change failed";
         }
       })
@@ -189,8 +202,10 @@ const authSlice = createSlice({
 
         if (!isError) {
           state.error = null;
+          state.success = true;
         } else {
           state.error = action.payload.res.message || "Error deleting store";
+          state.success = false;
         }
       });
   },

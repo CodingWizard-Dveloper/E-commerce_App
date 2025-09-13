@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Loader from "./components/ui/Loader";
 import AppRoutes from "./Routes";
+import { ToastContainer } from "react-toastify";
 
 import { GuestRoute, PrivateRoute } from "./config/restrictRoute";
 import Layout from "./components/layout";
@@ -26,13 +27,14 @@ export default function App() {
 
   return (
     <Layout>
+      <ToastContainer />
       <Routes>
         <Route index element={<Home />} />
         <Route
           path="/*"
           element={
             <PrivateRoute>
-            <AppRoutes />
+              <AppRoutes />
             </PrivateRoute>
           }
         />
