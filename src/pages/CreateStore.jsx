@@ -1,5 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Store, FileText, AlertCircle, Upload, X, Image } from "lucide-react";
+import {
+  Store,
+  FileText,
+  AlertCircle,
+  Upload,
+  X,
+  Image,
+  ChevronDown,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useRef, useEffect } from "react";
@@ -16,6 +24,15 @@ export default function CreateStore() {
   const [selectedImage, setSelectedImage] = useState(null);
   const fileInputRef = useRef(null);
 
+  const shopTypes = [
+    "Electronics",
+    "Fasion",
+    "Living",
+    "Cosmatics",
+    "Books",
+    "Sports",
+  ];
+
   // Reset the signup flag when component mounts
   useEffect(() => {
     dispatch(resetSignupFlag());
@@ -28,7 +45,7 @@ export default function CreateStore() {
     setValue,
   } = useForm();
 
-  const { storeName, description } = errors;
+  const { storeName, description, storeType } = errors;
 
   // Drag events
   const handleDrag = (e) => {
@@ -77,6 +94,7 @@ export default function CreateStore() {
     formData.append("description", data.description);
     if (selectedImage) formData.append("storeImage", selectedImage);
     formData.append("ownerId", user?._id);
+    formData.append("type", data?.storeType);
 
     dispatch(createStore({ data: formData }));
     navigate("/");
@@ -189,6 +207,60 @@ export default function CreateStore() {
               <span className="flex items-center gap-1 mt-1 text-sm font-medium text-red-600 animate-fade-in">
                 <AlertCircle className="w-4 h-4" />
                 {storeName.message}
+              </span>
+            )}
+          </div>
+
+          {/* Store Type */}
+          <div>
+            <label
+              className={`block text-sm font-medium ${
+                storeType ? "text-red-600" : "text-gray-600"
+              }`}
+            >
+              Store Type
+            </label>
+            <div
+              className={`flex items-center border rounded-xl mt-1 px-3 ${
+                storeType ? "border-red-500" : "border-gray-300"
+              }`}
+            >
+              <Store
+                className={`w-5 h-5 ${
+                  storeType ? "text-red-500" : "text-gray-400"
+                }`}
+              />
+              <select
+                {...register("storeType", {
+                  required: "Store type is required",
+                })}
+                className="w-full px-3 py-2 focus:outline-none rounded-xl bg-transparent text-gray-700 appearance-none cursor-pointer"
+                defaultValue=""
+              >
+                <option value="" disabled className="text-gray-400">
+                  Select store type
+                </option>
+                {shopTypes?.map((type, index) => (
+                  <option
+                    key={index}
+                    value={`${type?.[0].toLowerCase()}${type.slice(1)}`}
+                    className="text-gray-700 bg-white hover:bg-gray-50 py-2"
+                  >
+                    {type}
+                  </option>
+                ))}
+              </select>
+              {/* Custom dropdown arrow */}
+              <ChevronDown
+                className={`w-5 h-5 ml-2 pointer-events-none ${
+                  storeType ? "text-red-500" : "text-gray-400"
+                }`}
+              />
+            </div>
+            {storeType && (
+              <span className="flex items-center gap-1 mt-1 text-sm font-medium text-red-600 animate-fade-in">
+                <AlertCircle className="w-4 h-4" />
+                {storeType.message}
               </span>
             )}
           </div>

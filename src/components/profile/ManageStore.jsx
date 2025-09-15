@@ -1,6 +1,11 @@
+import { Trash2 } from "lucide-react";
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { checkAuth, deleteStore } from "../../slice/auth.slice";
 
 const ManageStore = () => {
+  const dispatch = useDispatch()
+  const {user} = useSelector(state => state.auth)
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -14,7 +19,7 @@ const ManageStore = () => {
             ) {
               dispatch(
                 deleteStore({
-                  storeId: defaultUser?.store?._id,
+                  storeId: user?.store?._id,
                   callBack: () => dispatch(checkAuth()),
                 })
               );

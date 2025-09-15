@@ -41,7 +41,7 @@ export const changeUser = createAsyncThunk(
 export const deleteStore = createAsyncThunk(
   "Auth/DeleteStore",
   async (data) => {
-    const { response, status } = await ApiRequests.deleteStore(data.storeId);
+    const { response, status } = await ApiRequests.deleteStore({storeId: data.storeId});
 
     if (data.callBack && response) data.callBack();
 
