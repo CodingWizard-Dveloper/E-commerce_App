@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "local": "env-cmd -f .env.local vite --open"
+    "local": "env-cmd -f .env.local vite"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",

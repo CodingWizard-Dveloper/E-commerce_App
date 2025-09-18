@@ -27,7 +27,7 @@ export default function Navbar() {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const location = useLocation();
-  const userStore = user?.store;
+  const userStore = user?.store ?? user?.storeId;
 
   const userActions = [
     { name: "Your Profile", href: "/profile" },

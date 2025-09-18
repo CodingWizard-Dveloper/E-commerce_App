@@ -41,9 +41,20 @@ export const changeUser = createAsyncThunk(
 export const deleteStore = createAsyncThunk(
   "Auth/DeleteStore",
   async (data) => {
-    const { response, status } = await ApiRequests.deleteStore({storeId: data.storeId});
+    const { response, status } = await ApiRequests.deleteStore({
+      storeId: data.storeId,
+    });
 
     if (data.callBack && response) data.callBack();
+
+    return { res: response.data, status };
+  }
+);
+
+export const updateStore = createAsyncThunk(
+  "Auth/updateStore",
+  async ({ data }) => {
+    const { response, status } = await ApiRequests.updateStore(data);
 
     return { res: response.data, status };
   }
@@ -207,6 +218,27 @@ const authSlice = createSlice({
           state.error = action.payload.res.message || "Error deleting store";
           state.success = false;
         }
+      })
+
+      .addCase(updateStore.pending, (state, _) => {
+        state.loading = { bool: true, message: "Updating store" };
+      })
+      .addCase(updateStore.fulfilled, (state, action) => {
+        state.loading = { ...state.loading, bool: false };
+
+        const isError = checkStatus(action.payload.status);
+
+        if (!isError) {
+          state.error = null;
+          state.success = true;
+          state.user = action.payload.res.user
+        } else {
+          state.error = action.payload.res.message || "Error Updating store";
+          state.success = false;
+        }
+      })
+      .addCase(updateStore.rejected, (state, _) => {
+        state.loading = { ...state.loading, bool: false };
       });
   },
 });

@@ -15,8 +15,16 @@ const ApiRequests = {
     return { response, status: response.status };
   },
   createStore: async (data) => {
-    const response = await api.post("/auth/workspace", data);
+    const response = await api.post("/store", data);
 
+    return { response, status: response.status };
+  },
+  deleteStore: async (data) => {
+    const response = await api.delete("/store", { data });
+    return { response, status: response.status };
+  },
+  updateStore: async (data) => {
+    const response = await api.patch("/store", data);
     return { response, status: response.status };
   },
   changeUser: async (data) => {
@@ -26,11 +34,6 @@ const ApiRequests = {
   },
   refreshToken: async (refreshToken) => {
     const response = await api.post("/auth/refresh", { refreshToken });
-    return { response, status: response.status };
-  },
-  deleteStore: async (data) => {
-    console.log("🚀 ~ data:", data);
-    const response = await api.delete("/auth/workspace", { data });
     return { response, status: response.status };
   },
 };
