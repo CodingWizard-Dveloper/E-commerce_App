@@ -20,15 +20,6 @@ export const signup = createAsyncThunk("Auth/singup", async ({ data }) => {
   return { res: response.data, status };
 });
 
-export const createStore = createAsyncThunk(
-  "Auth/CreateStore",
-  async ({ data }) => {
-    const { response, status } = await ApiRequests.createStore(data);
-
-    return { res: response.data, status };
-  }
-);
-
 export const changeUser = createAsyncThunk(
   "Auth/changeUser",
   async ({ data }) => {
@@ -38,31 +29,9 @@ export const changeUser = createAsyncThunk(
   }
 );
 
-export const deleteStore = createAsyncThunk(
-  "Auth/DeleteStore",
-  async (data) => {
-    const { response, status } = await ApiRequests.deleteStore({
-      storeId: data.storeId,
-    });
-
-    if (data.callBack && response) data.callBack();
-
-    return { res: response.data, status };
-  }
-);
-
-export const updateStore = createAsyncThunk(
-  "Auth/updateStore",
-  async ({ data }) => {
-    const { response, status } = await ApiRequests.updateStore(data);
-
-    return { res: response.data, status };
-  }
-);
-
 const initialState = {
   user: null,
-  loading: { bool: true, message: "" },
+  loading: { bool: true, message: "", full: true },
   error: null,
   token: null,
   justSignedUp: false,
@@ -88,12 +57,12 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(checkAuth.pending, (state, _) => {
-        state.loading = { bool: true, message: "Checking Auth" };
+        state.loading = { bool: true, message: "Checking Auth", full: true };
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
         let isErrorStatus = false;
 
-        state.loading = { ...state.loading, bool: false };
+        state.loading = { ...state.loading, bool: false, full: false };
         if (action.payload.status !== 401) {
           isErrorStatus = checkStatus(action.payload.status);
         }
@@ -119,7 +88,7 @@ const authSlice = createSlice({
       })
 
       .addCase(login.pending, (state) => {
-        state.loading = { bool: true, message: "Loging In" };
+        state.loading = { bool: true, message: "Loging In", full: true };
       })
       .addCase(login.fulfilled, (state, action) => {
         const isError = checkStatus(action.payload.status);
@@ -148,7 +117,7 @@ const authSlice = createSlice({
       })
 
       .addCase(signup.pending, (state) => {
-        state.loading = { bool: true, message: "Creating User" };
+        state.loading = { bool: true, message: "Creating User", full: true };
       })
       .addCase(signup.fulfilled, (state, action) => {
         const isError = checkStatus(action.payload.status);
@@ -169,26 +138,8 @@ const authSlice = createSlice({
         }
       })
 
-      .addCase(createStore.pending, (state, action) => {
-        state.loading = { bool: true, message: "Creating Store" };
-      })
-      .addCase(createStore.fulfilled, (state, action) => {
-        const isError = checkStatus(action.payload.status);
-        state.loading = { ...state.loading, bool: false };
-        state.justSignedUp = false;
-
-        if (!isError && action.payload.res.token) {
-          state.success = true;
-          state.user = action.payload.res.user;
-          state.error = null;
-        } else {
-          state.success = false;
-          state.error = action.payload.res.message || "Signup failed";
-        }
-      })
-
       .addCase(changeUser.pending, (state, _) => {
-        state.loading = { bool: true, message: "Updating user" };
+        state.loading = { bool: true, message: "Updating user", full: false };
       })
       .addCase(changeUser.fulfilled, (state, action) => {
         state.loading = { ...state.loading, bool: false };
@@ -202,43 +153,6 @@ const authSlice = createSlice({
           state.success = false;
           state.error = action.payload.res.message || "Data change failed";
         }
-      })
-
-      .addCase(deleteStore.pending, (state, _) => {
-        state.loading = { bool: true, message: "Deleting store" };
-      })
-      .addCase(deleteStore.fulfilled, (state, action) => {
-        state.loading = { ...state.loading, bool: false };
-        const isError = checkStatus(action.payload.status);
-
-        if (!isError) {
-          state.error = null;
-          state.success = true;
-        } else {
-          state.error = action.payload.res.message || "Error deleting store";
-          state.success = false;
-        }
-      })
-
-      .addCase(updateStore.pending, (state, _) => {
-        state.loading = { bool: true, message: "Updating store" };
-      })
-      .addCase(updateStore.fulfilled, (state, action) => {
-        state.loading = { ...state.loading, bool: false };
-
-        const isError = checkStatus(action.payload.status);
-
-        if (!isError) {
-          state.error = null;
-          state.success = true;
-          state.user = action.payload.res.user
-        } else {
-          state.error = action.payload.res.message || "Error Updating store";
-          state.success = false;
-        }
-      })
-      .addCase(updateStore.rejected, (state, _) => {
-        state.loading = { ...state.loading, bool: false };
       });
   },
 });

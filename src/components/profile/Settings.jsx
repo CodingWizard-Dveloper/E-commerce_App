@@ -4,12 +4,14 @@ import { Camera, X, User2Icon, LogOut } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { changeUser, checkAuth, logout } from "../../slice/auth.slice";
 import { toast } from "react-toastify";
+import Loader from "../ui/Loader";
 
 const Settings = () => {
   const {
     user: defaultUser,
     error,
     success,
+    loading,
   } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [selectedFile, setSelectedFile] = useState(null);
@@ -20,12 +22,13 @@ const Settings = () => {
     avatar: defaultUser?.avatar,
     joined: defaultUser?.createdAt,
   });
+  // Form for user profile information
   const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isDirty },
+    register: registerProfile,
+    handleSubmit: handleSubmitProfile,
+    watch: watchProfile,
+    setValue: setValueProfile,
+    formState: { errors: errorsProfile, isDirty: isDirtyProfile },
   } = useForm({
     defaultValues: {
       name: defaultUser?.userName || "",
@@ -33,9 +36,26 @@ const Settings = () => {
       avatar: defaultUser?.avatar || "",
     },
   });
-  const watchedValues = watch();
-  // Check if form is modified (including image changes)
-  const isFormModified = isDirty || imageChanged;
+
+  // Form for password change
+  const {
+    register: registerPassword,
+    handleSubmit: handleSubmitPassword,
+    watch: watchPassword,
+    formState: { errors: errorsPassword },
+  } = useForm({
+    defaultValues: {
+      currentPass: "",
+      newPass: "",
+      confirmPass: "",
+    },
+  });
+
+  const watchedProfileValues = watchProfile();
+  const watchedPasswordValues = watchPassword();
+
+  // Check if profile form is modified (including image changes)
+  const isProfileFormModified = isDirtyProfile || imageChanged;
 
   const formattedDate = new Date(user.joined).toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -49,7 +69,7 @@ const Settings = () => {
       setSelectedFile(file); // Store the actual file
       setImageChanged(true); // Mark as changed
       const imageUrl = URL.createObjectURL(file);
-      setValue("avatar", imageUrl);
+      setValueProfile("avatar", imageUrl);
       setUser((prev) => ({ ...prev, avatar: imageUrl }));
     }
   };
@@ -57,7 +77,7 @@ const Settings = () => {
   const handleRemoveImage = () => {
     setSelectedFile(null); // Clear the file
     setImageChanged(true); // Mark as changed
-    setValue("avatar", "");
+    setValueProfile("avatar", "");
     setUser((prev) => ({ ...prev, avatar: "" }));
   };
 
@@ -89,7 +109,7 @@ const Settings = () => {
     const formData = new FormData();
     formData.append("currentPass", data.currentPass);
     formData.append("newPass", data.newPass);
-    formData.append("profileImage", selectedFile ?? user?.avatar);
+    // Don't include profile image in password change
 
     dispatch(
       changeUser({
@@ -98,12 +118,15 @@ const Settings = () => {
     );
   };
 
+  if (loading.bool && !loading.full) {
+    return <Loader message={loading.message} />;
+  }
   return (
     <div className="flex flex-col gap-6">
       {/* Profile Edit Form */}
       <div className="bg-white rounded-lg p-6 shadow-sm border">
         <h1 className="text-lg font-semibold mb-4">Edit Profile</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmitProfile(onSubmit)} className="space-y-6">
           {/* Avatar Section */}
           <div className="flex flex-col gap-4">
             <label className="text-sm font-medium text-gray-700">
@@ -111,9 +134,12 @@ const Settings = () => {
             </label>
             <div className="flex items-end gap-4">
               <div className="relative group w-28 h-28">
-                {watchedValues?.avatar ? (
+                {watchedProfileValues?.avatar ? (
                   <img
-                    src={watchedValues.avatar || "/profile/default-avatar.png"}
+                    src={
+                      watchedProfileValues.avatar ||
+                      "/profile/default-avatar.png"
+                    }
                     className="h-28 w-28 rounded-full object-cover border-4 border-indigo-600 shadow"
                     loading="lazy"
                   />
@@ -136,7 +162,7 @@ const Settings = () => {
                 </label>
               </div>
               {/* Remove button */}
-              {watchedValues.avatar && (
+              {watchedProfileValues.avatar && (
                 <button
                   type="button"
                   onClick={handleRemoveImage}
@@ -155,7 +181,7 @@ const Settings = () => {
             </label>
             <input
               type="text"
-              {...register("name", {
+              {...registerProfile("name", {
                 required: "Name is required",
                 minLength: {
                   value: 2,
@@ -163,13 +189,13 @@ const Settings = () => {
                 },
               })}
               className={`rounded-lg border px-3 py-2 w-full max-w-md ${
-                errors.name ? "border-red-500" : "border-gray-300"
+                errorsProfile.name ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter your name"
             />
-            {errors.name && (
+            {errorsProfile.name && (
               <span className="text-red-500 text-xs mt-1">
-                {errors.name.message}
+                {errorsProfile.name.message}
               </span>
             )}
           </div>
@@ -182,7 +208,7 @@ const Settings = () => {
             <input
               type="email"
               disabled
-              {...register("email", {
+              {...registerProfile("email", {
                 required: "Email is required",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -190,13 +216,13 @@ const Settings = () => {
                 },
               })}
               className={`rounded-lg border px-3 py-2 w-full max-w-md bg-gray-100 cursor-not-allowed ${
-                errors.email ? "border-red-500" : "border-gray-300"
+                errorsProfile.email ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter your email"
             />
-            {errors.email && (
+            {errorsProfile.email && (
               <span className="text-red-500 text-xs mt-1">
-                {errors.email.message}
+                {errorsProfile.email.message}
               </span>
             )}
             <p className="text-xs text-gray-500 mt-1">
@@ -213,7 +239,7 @@ const Settings = () => {
           </div>
 
           {/* Save Button */}
-          {isFormModified && (
+          {isProfileFormModified && (
             <button
               type="submit"
               className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium"
@@ -230,7 +256,10 @@ const Settings = () => {
           Change Password
         </h3>
 
-        <form onSubmit={handleSubmit(changePass)} className="space-y-4 mb-6">
+        <form
+          onSubmit={handleSubmitPassword(changePass)}
+          className="space-y-4 mb-6"
+        >
           {/* Current Password Field */}
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 mb-2">
@@ -238,7 +267,7 @@ const Settings = () => {
             </label>
             <input
               type="password"
-              {...register("currentPass", {
+              {...registerPassword("currentPass", {
                 required: "Current password is required",
                 minLength: {
                   value: 6,
@@ -246,13 +275,15 @@ const Settings = () => {
                 },
               })}
               className={`rounded-lg border px-3 py-2 w-full max-w-md ${
-                errors.currentPass ? "border-red-500" : "border-gray-300"
+                errorsPassword.currentPass
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
               placeholder="Enter your current password"
             />
-            {errors.currentPass && (
+            {errorsPassword.currentPass && (
               <span className="text-red-500 text-xs mt-1">
-                {errors.currentPass.message}
+                {errorsPassword.currentPass.message}
               </span>
             )}
           </div>
@@ -264,7 +295,7 @@ const Settings = () => {
             </label>
             <input
               type="password"
-              {...register("newPass", {
+              {...registerPassword("newPass", {
                 required: "New password is required",
                 minLength: {
                   value: 6,
@@ -272,13 +303,13 @@ const Settings = () => {
                 },
               })}
               className={`rounded-lg border px-3 py-2 w-full max-w-md ${
-                errors.newPass ? "border-red-500" : "border-gray-300"
+                errorsPassword.newPass ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Enter your new password"
             />
-            {errors.newPass && (
+            {errorsPassword.newPass && (
               <span className="text-red-500 text-xs mt-1">
-                {errors.newPass.message}
+                {errorsPassword.newPass.message}
               </span>
             )}
           </div>
@@ -290,19 +321,22 @@ const Settings = () => {
             </label>
             <input
               type="password"
-              {...register("confirmPass", {
+              {...registerPassword("confirmPass", {
                 required: "Please confirm your new password",
                 validate: (value) =>
-                  value === watchedValues.newPass || "Passwords do not match",
+                  value === watchedPasswordValues.newPass ||
+                  "Passwords do not match",
               })}
               className={`rounded-lg border px-3 py-2 w-full max-w-md ${
-                errors.confirmPass ? "border-red-500" : "border-gray-300"
+                errorsPassword.confirmPass
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
               placeholder="Confirm your new password"
             />
-            {errors.confirmPass && (
+            {errorsPassword.confirmPass && (
               <span className="text-red-500 text-xs mt-1">
-                {errors.confirmPass.message}
+                {errorsPassword.confirmPass.message}
               </span>
             )}
           </div>

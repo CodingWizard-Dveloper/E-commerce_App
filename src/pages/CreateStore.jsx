@@ -11,8 +11,8 @@ import {
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { createStore, resetSignupFlag } from "../slice/auth.slice";
-// import { createStore } from "../slice/store.slice"; // <-- adjust path
+import { resetSignupFlag } from "../slice/auth.slice";
+import { createStore } from "../slice/store.slice";
 
 export default function CreateStore() {
   const dispatch = useDispatch();

@@ -12,16 +12,23 @@ import { ToastContainer } from "react-toastify";
 import { GuestRoute, PrivateRoute } from "./config/restrictRoute";
 import Layout from "./components/layout";
 import Home from "./pages/Home";
+import { getStore } from "./slice/store.slice";
 
 export default function App() {
   const dispatch = useDispatch();
   const { loading, token } = useSelector((state) => state.auth);
+  const { loading: storeLoading } = useSelector((state) => state.store);
 
   useEffect(() => {
     dispatch(checkAuth());
+    dispatch(getStore());
   }, [dispatch, token]);
 
-  if (loading.bool) {
+  
+  if (
+    (loading.bool && loading.full) ||
+    (storeLoading.bool && storeLoading.full)
+  ) {
     return <Loader message={loading.message} />;
   }
 

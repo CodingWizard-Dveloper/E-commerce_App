@@ -27,6 +27,10 @@ const ApiRequests = {
     const response = await api.patch("/store", data);
     return { response, status: response.status };
   },
+  getStore: async () => {
+    const response = await api.get("/store");
+    return { response, status: response.status };
+  },
   changeUser: async (data) => {
     const response = await api.patch("/auth/", data);
 

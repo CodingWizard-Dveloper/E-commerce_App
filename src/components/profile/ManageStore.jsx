@@ -1,31 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import {
   Trash2,
   Store,
-  FileText,
   Camera,
   X,
-  User2Icon,
   Package,
   Users,
   DollarSign,
   ChevronDown,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  checkAuth,
-  deleteStore,
-  changeUser,
-  updateStore,
-} from "../../slice/auth.slice";
+import { checkAuth } from "../../slice/auth.slice";
+import { deleteStore, updateStore } from "../../slice/store.slice";
 import { toast } from "react-toastify";
+import Loader from "../ui/Loader";
+
+// Helper to get default store values
+const getDefaultStoreValues = (store) => ({
+  storeName: store?.storeName || "",
+  description: store?.description || "",
+  storeImage: store?.storeImage || "",
+  type: store?.type || "",
+});
 
 const ManageStore = () => {
   const dispatch = useDispatch();
-  const { user, error, success } = useSelector((state) => state.auth);
+  const { store } = useSelector((state) => state.store);
+  const { user } = useSelector((state) => state.auth);
+  const { error, success, loading } = useSelector((state) => state.store);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageChanged, setImageChanged] = useState(false);
+
+  // Memoize default values to avoid unnecessary resets
+  const defaultValues = useMemo(() => getDefaultStoreValues(store), [store]);
 
   const {
     register,
@@ -35,12 +43,7 @@ const ManageStore = () => {
     reset,
     formState: { errors, isDirty },
   } = useForm({
-    defaultValues: {
-      storeName: user?.store?.storeName || "",
-      description: user?.store?.description || "",
-      storeImage: user?.store?.storeImage || "",
-      type: user?.store?.type || "",
-    },
+    defaultValues,
   });
 
   const watchedValues = watch();
@@ -55,6 +58,19 @@ const ManageStore = () => {
     "Sports",
   ];
 
+  // Reset form and image state when user changes
+  useEffect(() => {
+    reset(getDefaultStoreValues(store));
+    setSelectedFile(null);
+    setImageChanged(false);
+    // Clean up any blob URLs
+    if (selectedFile && watchedValues.storeImage) {
+      URL.revokeObjectURL(watchedValues.storeImage);
+    }
+    // eslint-disable-next-line
+  }, [store]);
+
+  // Handle image file selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -65,48 +81,38 @@ const ManageStore = () => {
     }
   };
 
+  // Remove selected image
   const handleRemoveImage = () => {
     setSelectedFile(null);
     setImageChanged(true);
     setValue("storeImage", null);
   };
 
+  // Cancel editing and reset form
   const handleCancel = () => {
-    // Reset form to original values
-    reset({
-      storeName: user?.store?.storeName || "",
-      description: user?.store?.description || "",
-      storeImage: user?.store?.storeImage || "",
-      type: user?.store?.type || "",
-    });
-
-    // Reset image state
+    if (loading.bool) return;
+    reset(getDefaultStoreValues(store));
     setSelectedFile(null);
     setImageChanged(false);
-
-    // Clean up any blob URLs
-    if (selectedFile) {
+    if (selectedFile && watchedValues.storeImage) {
       URL.revokeObjectURL(watchedValues.storeImage);
     }
   };
 
+  // Submit form data
   const onSubmit = (data) => {
+    if (loading.bool) return;
     const formData = new FormData();
     formData.append("ownerId", user?._id);
-    formData.append("storeId", user?.store?._id);
+    formData.append("storeId", store?._id);
     formData.append("storeName", data.storeName);
     formData.append("description", data.description);
     formData.append("type", data.type);
-
-      formData.append("storeImage", selectedFile ?? user?.store?.storeImage);
-
-    dispatch(
-      updateStore({
-        data: formData,
-      })
-    );
+    formData.append("storeImage", selectedFile ?? store?.storeImage);
+    dispatch(updateStore({ data: formData }));
   };
 
+  // Delete store
   const deleteStoreById = () => {
     if (
       window.confirm(
@@ -115,20 +121,26 @@ const ManageStore = () => {
     ) {
       dispatch(
         deleteStore({
-          storeId: user?.store?._id,
+          storeId: store?._id,
           callBack: () => dispatch(checkAuth()),
         })
       );
+      reset(getDefaultStoreValues(store));
     }
   };
 
+  // Toast notifications
   useEffect(() => {
     if (error) {
       toast.error(error);
-    } else if (success) {
+    } else if (success.bool && success.type === "update") {
       toast.success("Store updated successfully");
     }
   }, [error, success]);
+
+  if (loading.bool) {
+    return <Loader message={loading.message} />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -241,7 +253,7 @@ const ManageStore = () => {
                   required: "Store type is required",
                 })}
                 className="w-full px-3 py-2 focus:outline-none bg-transparent text-gray-700 appearance-none cursor-pointer"
-                defaultValue={user?.store?.type || ""}
+                defaultValue={store?.type || ""}
               >
                 <option value="" disabled>
                   Select store type
@@ -296,7 +308,10 @@ const ManageStore = () => {
             <div className="flex gap-4">
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium"
+                className={`px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium ${
+                  loading.bool ? "disabled" : ""
+                }`}
+                disabled={loading.bool}
               >
                 Update Store
               </button>
@@ -304,6 +319,7 @@ const ManageStore = () => {
                 type="button"
                 onClick={handleCancel}
                 className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition font-medium"
+                disabled={loading.bool}
               >
                 Cancel
               </button>

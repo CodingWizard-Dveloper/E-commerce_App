@@ -35,7 +35,7 @@ export default function Profile() {
     },
   ];
 
-  if (defaultUser?.store) {
+  if (defaultUser?.storeId) {
     userTabs.splice(2, 0, {
       id: "ManageStore",
       label: "Manage store",
