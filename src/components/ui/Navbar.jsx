@@ -36,8 +36,19 @@ export default function Navbar() {
   ];
 
   if (!userStore) {
-    userActions.unshift({ name: "Create Store", href: "/createstore" });
+    userActions.splice(1, 0, { name: "Create Store", href: "/createstore" });
+  } else {
+    userActions.splice(1, 0, {
+      name: "Manage Store",
+      href: "/profile/ManageStore",
+    });
   }
+
+  const navBarCond =
+    user &&
+    location.pathname !== "/createstore" &&
+    location.pathname !== "/addproduct";
+
   return (
     <Disclosure
       as="nav"
@@ -46,7 +57,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center justify-around">
           {/* Mobile menu button */}
-          {user && location.pathname !== "/createstore" && (
+          {navBarCond && (
             <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
               <DisclosureButton className="group inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-300/30 hover:text-black focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <span className="sr-only">Open main menu</span>
@@ -75,7 +86,7 @@ export default function Navbar() {
           </div>
 
           {/* Navigation Links */}
-          {user && location.pathname !== "/createstore" && (
+          {navBarCond && (
             <div className="hidden sm:ml-6 sm:block">
               <div className="flex space-x-4">
                 {navigation.map((item) => {
@@ -176,7 +187,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Navigation */}
-      {(user || !location.pathname === "createstore") && (
+      {navBarCond && (
         <DisclosurePanel className="sm:hidden">
           <div className="space-y-1 px-2 pt-2 pb-3">
             {navigation.map((item) => {

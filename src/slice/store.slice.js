@@ -43,7 +43,7 @@ const initialState = {
   loading: { bool: false, message: "", full: true },
   store: null,
   error: null,
-  success: {bool: null, type: null},
+  success: { bool: null, type: null },
 };
 
 const storeSlice = createSlice({
@@ -59,11 +59,11 @@ const storeSlice = createSlice({
         const isError = checkStatus(action.payload.status);
 
         if (!isError) {
-          state.success = {bool: true, type: "get"};
+          state.success = { bool: true, type: "get" };
           state.store = action.payload.res.store;
           state.error = null;
         } else {
-          state.success = {type: "get", bool: false};
+          state.success = { type: "get", bool: false };
           state.error = action.payload.res.message || "Failed checking store";
         }
       })
@@ -72,18 +72,18 @@ const storeSlice = createSlice({
       })
 
       .addCase(createStore.pending, (state, action) => {
-        state.loading = { bool: true, message: "Creating Store" };
+        state.loading = { bool: true, message: "Creating Store", full: true };
       })
       .addCase(createStore.fulfilled, (state, action) => {
         const isError = checkStatus(action.payload.status);
         state.loading = { ...state.loading, bool: false };
 
-        if (!isError && action.payload.res.token) {
-          state.success = {type: "create", bool: true};
+        if (!isError) {
+          state.success = { type: "create", bool: true };
           state.user = action.payload.res.user;
           state.error = null;
         } else {
-          state.success = { type: "create", bool: false};
+          state.success = { type: "create", bool: false };
           state.error = action.payload.res.message || "Signup failed";
         }
       })
@@ -100,10 +100,10 @@ const storeSlice = createSlice({
 
         if (!isError) {
           state.error = null;
-          state.success = {type:"delete", bool: true};
+          state.success = { type: "delete", bool: true };
         } else {
           state.error = action.payload.res.message || "Error deleting store";
-          state.success = {bool:false, type: "delete"};
+          state.success = { bool: false, type: "delete" };
         }
       })
       .addCase(deleteStore.rejected, (state, _) => {
@@ -111,7 +111,7 @@ const storeSlice = createSlice({
       })
 
       .addCase(updateStore.pending, (state, _) => {
-        state.loading = { bool: true, message: "Updating store" };
+        state.loading = { bool: true, message: "Updating store", full: false };
       })
       .addCase(updateStore.fulfilled, (state, action) => {
         state.loading = { ...state.loading, bool: false };
@@ -120,11 +120,11 @@ const storeSlice = createSlice({
 
         if (!isError) {
           state.error = null;
-          state.success = {type: "update",bool: true};
+          state.success = { type: "update", bool: true };
           state.user = action.payload.res.user;
         } else {
           state.error = action.payload.res.message || "Error Updating store";
-          state.success = {bool: false, type: "update"};
+          state.success = { bool: false, type: "update" };
         }
       })
       .addCase(updateStore.rejected, (state, _) => {

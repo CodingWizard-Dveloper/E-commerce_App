@@ -27,3 +27,13 @@ export function PrivateRoute({ children }) {
 
   return user ? children : <Navigate to="/login" />;
 }
+
+export function StoreRoute({ children }) {
+  const { store, loading } = useSelector((state) => state.store);
+
+  if (loading.bool) {
+    return <Loader message={loading.message} />;
+  }
+
+  return store ? children : <Navigate to="/" />;
+}

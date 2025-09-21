@@ -9,12 +9,15 @@ import {
   Users,
   DollarSign,
   ChevronDown,
+  Plus,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuth } from "../../slice/auth.slice";
 import { deleteStore, updateStore } from "../../slice/store.slice";
 import { toast } from "react-toastify";
 import Loader from "../ui/Loader";
+import { useNavigate } from "react-router-dom";
+import { getProducts } from "../../slice/product.slice";
 
 // Helper to get default store values
 const getDefaultStoreValues = (store) => ({
@@ -26,11 +29,15 @@ const getDefaultStoreValues = (store) => ({
 
 const ManageStore = () => {
   const dispatch = useDispatch();
+  const { products, loading: productLoding } = useSelector(
+    (state) => state.product
+  );
   const { store } = useSelector((state) => state.store);
   const { user } = useSelector((state) => state.auth);
   const { error, success, loading } = useSelector((state) => state.store);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageChanged, setImageChanged] = useState(false);
+  const navigate = useNavigate();
 
   // Memoize default values to avoid unnecessary resets
   const defaultValues = useMemo(() => getDefaultStoreValues(store), [store]);
@@ -138,9 +145,9 @@ const ManageStore = () => {
     }
   }, [error, success]);
 
-  if (loading.bool) {
-    return <Loader message={loading.message} />;
-  }
+  useEffect(() => {
+    dispatch(getProducts());
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -171,161 +178,245 @@ const ManageStore = () => {
       {/* Store Information Edit */}
       <div className="bg-white rounded-lg p-6 shadow-sm border">
         <h3 className="text-lg font-semibold mb-4">Store Information</h3>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Store Image Section */}
-          <div className="flex flex-col gap-4">
-            <label className="text-sm font-medium text-gray-700">
-              Store Image
-            </label>
-            <div className="flex items-end gap-4">
-              <div className="relative group w-28 h-28">
-                {watchedValues?.storeImage ? (
-                  <img
-                    src={watchedValues.storeImage}
-                    className="h-28 w-28 rounded-lg object-cover border-4 border-indigo-600 shadow"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="h-28 w-28 rounded-lg bg-gray-100 border-4 border-indigo-600 shadow flex items-center justify-center">
-                    <Store className="h-12 w-12 text-gray-400" />
-                  </div>
+        {loading?.bool ? (
+          <Loader message={loading.message} />
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* ...existing code for store update form... */}
+            {/* Store Image Section */}
+            <div className="flex flex-col gap-4">
+              <label className="text-sm font-medium text-gray-700">
+                Store Image
+              </label>
+              <div className="flex items-end gap-4">
+                <div className="relative group w-28 h-28">
+                  {watchedValues?.storeImage ? (
+                    <img
+                      src={watchedValues.storeImage}
+                      className="h-28 w-28 rounded-lg object-cover border-4 border-indigo-600 shadow"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="h-28 w-28 rounded-lg bg-gray-100 border-4 border-indigo-600 shadow flex items-center justify-center">
+                      <Store className="h-12 w-12 text-gray-400" />
+                    </div>
+                  )}
+                  {/* Camera overlay on hover */}
+                  <label className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                    <Camera className="h-6 w-6 text-white" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                {/* Remove button */}
+                {watchedValues.storeImage && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="flex items-center gap-1 bg-red-600 text-white text-sm px-3 py-2 rounded-lg shadow hover:bg-red-700 transition"
+                  >
+                    <X className="h-4 w-4" /> Remove
+                  </button>
                 )}
-                {/* Camera overlay on hover */}
-                <label className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                  <Camera className="h-6 w-6 text-white" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
               </div>
-              {/* Remove button */}
-              {watchedValues.storeImage && (
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="flex items-center gap-1 bg-red-600 text-white text-sm px-3 py-2 rounded-lg shadow hover:bg-red-700 transition"
-                >
-                  <X className="h-4 w-4" /> Remove
-                </button>
+            </div>
+
+            {/* Store Name Field */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">
+                Store Name
+              </label>
+              <input
+                type="text"
+                {...register("storeName", {
+                  required: "Store name is required",
+                  minLength: {
+                    value: 2,
+                    message: "Store name must be at least 2 characters",
+                  },
+                })}
+                className={`rounded-lg border px-3 py-2 w-full max-w-md ${
+                  errors.storeName ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="Enter store name"
+              />
+              {errors.storeName && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.storeName.message}
+                </span>
               )}
             </div>
-          </div>
 
-          {/* Store Name Field */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-2">
-              Store Name
-            </label>
-            <input
-              type="text"
-              {...register("storeName", {
-                required: "Store name is required",
-                minLength: {
-                  value: 2,
-                  message: "Store name must be at least 2 characters",
-                },
-              })}
-              className={`rounded-lg border px-3 py-2 w-full max-w-md ${
-                errors.storeName ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="Enter store name"
-            />
-            {errors.storeName && (
-              <span className="text-red-500 text-xs mt-1">
-                {errors.storeName.message}
-              </span>
-            )}
-          </div>
-
-          {/* Store Type Field */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-2">
-              Store Type
-            </label>
-            <div className="flex items-center border rounded-lg px-3 border-gray-300 w-full max-w-md">
-              <Store className="w-5 h-5 text-gray-400" />
-              <select
-                {...register("type", {
-                  required: "Store type is required",
-                })}
-                className="w-full px-3 py-2 focus:outline-none bg-transparent text-gray-700 appearance-none cursor-pointer"
-                defaultValue={store?.type || ""}
-              >
-                <option value="" disabled>
-                  Select store type
-                </option>
-                {storeTypes?.map((type, index) => (
-                  <option
-                    key={index}
-                    value={type.toLowerCase()}
-                    className="text-gray-700 bg-white"
-                  >
-                    {type}
+            {/* Store Type Field */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">
+                Store Type
+              </label>
+              <div className="flex items-center border rounded-lg px-3 border-gray-300 w-full max-w-md">
+                <Store className="w-5 h-5 text-gray-400" />
+                <select
+                  {...register("type", {
+                    required: "Store type is required",
+                  })}
+                  className="w-full px-3 py-2 focus:outline-none bg-transparent text-gray-700 appearance-none cursor-pointer"
+                  defaultValue={store?.type || ""}
+                >
+                  <option value="" disabled>
+                    Select store type
                   </option>
-                ))}
-              </select>
-              <ChevronDown className="w-5 h-5 ml-2 pointer-events-none text-gray-400" />
+                  {storeTypes?.map((type, index) => (
+                    <option
+                      key={index}
+                      value={type.toLowerCase()}
+                      className="text-gray-700 bg-white"
+                    >
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-5 h-5 ml-2 pointer-events-none text-gray-400" />
+              </div>
+              {errors.type && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.type.message}
+                </span>
+              )}
             </div>
-            {errors.type && (
-              <span className="text-red-500 text-xs mt-1">
-                {errors.type.message}
-              </span>
-            )}
-          </div>
 
-          {/* Description Field */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              {...register("description", {
-                required: "Description is required",
-                minLength: {
-                  value: 10,
-                  message: "Description must be at least 10 characters",
-                },
-              })}
-              className={`rounded-lg border px-3 py-2 w-full max-w-md resize-none ${
-                errors.description ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="Describe your store..."
-              rows="4"
-            />
-            {errors.description && (
-              <span className="text-red-500 text-xs mt-1">
-                {errors.description.message}
-              </span>
-            )}
-          </div>
-
-          {/* Save and Cancel Buttons */}
-          {isFormModified && (
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                className={`px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium ${
-                  loading.bool ? "disabled" : ""
+            {/* Description Field */}
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                {...register("description", {
+                  required: "Description is required",
+                  minLength: {
+                    value: 10,
+                    message: "Description must be at least 10 characters",
+                  },
+                })}
+                className={`rounded-lg border px-3 py-2 w-full max-w-md resize-none ${
+                  errors.description ? "border-red-500" : "border-gray-300"
                 }`}
-                disabled={loading.bool}
-              >
-                Update Store
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition font-medium"
-                disabled={loading.bool}
-              >
-                Cancel
-              </button>
+                placeholder="Describe your store..."
+                rows="4"
+              />
+              {errors.description && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.description.message}
+                </span>
+              )}
             </div>
-          )}
-        </form>
+
+            {/* Save and Cancel Buttons */}
+            {isFormModified && (
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  className={`px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition font-medium ${
+                    loading.bool ? "disabled" : ""
+                  }`}
+                  disabled={loading.bool}
+                >
+                  Update Store
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition font-medium"
+                  disabled={loading.bool}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </form>
+        )}
+      </div>
+
+      {/* Product Management */}
+      <div className="bg-white rounded-lg p-6 shadow-sm border w-full">
+        <div className="flex justify-between">
+          <h3 className="text-lg font-semibold mb-4">Product Management</h3>
+          <button
+            onClick={() => navigate("/addproduct")}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition font-medium"
+          >
+            <Plus className="h-5 w-5" />
+            Add Product
+          </button>
+        </div>
+        {productLoding.bool ? (
+          <Loader message={productLoding?.message} />
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {products && products.length > 0 ? (
+              products.map((product) => (
+                <div
+                  key={product._id}
+                  className="flex items-center gap-4 py-4 hover:bg-gray-50 transition cursor-pointer group"
+                  onClick={() => navigate(`/product/${product._id}`)}
+                >
+                  <img
+                    src={
+                      product.productImage || "/public/products/product-1.jpg"
+                    }
+                    alt={product.title}
+                    className="w-16 h-16 rounded-lg object-cover border border-gray-200 shadow-sm group-hover:scale-105 transition"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-800 truncate max-w-xs">
+                        {product.title}
+                      </span>
+                      <span className="text-xs px-2 py-1 rounded bg-gray-200 text-gray-600 capitalize">
+                        {product.type}
+                      </span>
+                    </div>
+                    <div className="text-gray-500 text-sm truncate max-w-xs">
+                      {product.desc}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="text-green-600 font-bold text-lg">
+                      ${product.price}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/product/update/${product._id}`);
+                        }}
+                      >
+                        Update
+                      </button>
+                      <button
+                        className="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // TODO: dispatch delete product action here
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-400 text-center py-8">
+                No products found.
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Danger Zone */}

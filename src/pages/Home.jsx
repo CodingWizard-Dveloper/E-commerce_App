@@ -76,24 +76,28 @@ export default function Home() {
           Shop by Category
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {category.map((cat) => (
-            <Link
-              key={cat.name}
-              to={`/category/${cat?.name?.split(" ").join("-")?.toLowerCase()}`}
-              className="group relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition"
-            >
-              <img
-                src={cat.img}
-                alt={cat.name}
-                className="h-56 w-full object-cover group-hover:scale-105 transition"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <span className="text-lg font-semibold text-white">
-                  {cat.name}
-                </span>
-              </div>
-            </Link>
-          ))}
+          {category.map((cat) => {
+            const cathref = cat?.name?.split(" ");
+            const catlength = cathref.length;
+            return (
+              <Link
+                key={cat.name}
+                to={`/category/${cathref[catlength - 1]?.toLowerCase()}`}
+                className="group relative rounded-2xl overflow-hidden shadow hover:shadow-lg transition"
+              >
+                <img
+                  src={cat.img}
+                  alt={cat.name}
+                  className="h-56 w-full object-cover group-hover:scale-105 transition"
+                />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <span className="text-lg font-semibold text-white">
+                    {cat.name}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 

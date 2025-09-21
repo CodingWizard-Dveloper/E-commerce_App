@@ -2,7 +2,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import NotFound from "./components/NotFound";
 import CreateStore from "./pages/CreateStore";
 import { useSelector } from "react-redux";
-import Profile from "./pages/Profile"
+import Profile from "./pages/Profile";
+import { StoreRoute } from "./config/restrictRoute";
+import CreateProduct from "./pages/AddProduct";
 
 const AppRoutes = () => {
   const { user } = useSelector((state) => state.auth);
@@ -16,6 +18,10 @@ const AppRoutes = () => {
       ) : (
         <Route path="/createstore" element={<CreateStore />} />
       )}
+      <Route
+        path="/addProduct"
+        element={<StoreRoute><CreateProduct /></StoreRoute>}
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

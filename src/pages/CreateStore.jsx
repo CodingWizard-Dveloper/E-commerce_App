@@ -13,11 +13,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { useState, useRef, useEffect } from "react";
 import { resetSignupFlag } from "../slice/auth.slice";
 import { createStore } from "../slice/store.slice";
+import { toast } from "react-toastify";
+import Loader from "../components/ui/Loader";
 
 export default function CreateStore() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { justSignedUp, user } = useSelector((state) => state.auth);
+
+  const { error, success, loading } = useSelector((state) => state.store);
 
   const [dragActive, setDragActive] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
@@ -26,7 +30,7 @@ export default function CreateStore() {
 
   const shopTypes = [
     "Electronics",
-    "Fasion",
+    "Fashion",
     "Living",
     "Cosmatics",
     "Books",
@@ -97,9 +101,20 @@ export default function CreateStore() {
     formData.append("type", data?.storeType);
 
     dispatch(createStore({ data: formData }));
-    navigate("/");
   };
 
+  useEffect(() => {
+    if (success?.bool && success?.type === "create") {
+      toast.success("Store Created");
+      navigate("/");
+    } else if (error) {
+      toast.error(error);
+    }
+  }, [success, error]);
+
+  if (loading.bool) {
+    return <Loader message="Creating Store" />;
+  }
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-purple-200">
       <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl p-8">
