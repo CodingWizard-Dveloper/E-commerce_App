@@ -16,7 +16,7 @@ import { getStore } from "./slice/store.slice";
 
 export default function App() {
   const dispatch = useDispatch();
-  const { loading, token } = useSelector((state) => state.auth);
+  const { loading: userLoading, token } = useSelector((state) => state.auth);
   const { loading: storeLoading } = useSelector((state) => state.store);
   const { loading: productLoading } = useSelector((state) => state.product);
 
@@ -38,7 +38,7 @@ export default function App() {
 
   if (storeLoading.bool && storeLoading.full)
     return showLoader(storeLoading?.message);
-  else if (loading.bool && loading.full) return showLoader(loading?.message);
+  else if (userLoading.bool && userLoading.full) return showLoader(userLoading?.message);
   else if (productLoading.bool && productLoading.full)
     return showLoader(productLoading?.message);
 

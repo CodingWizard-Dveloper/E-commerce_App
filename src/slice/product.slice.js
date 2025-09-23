@@ -2,15 +2,34 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import ApiRequests from "../services/Api.services";
 import checkStatus from "../config/CheckStatus";
 
-export const addProduct = createAsyncThunk("product/create", async (data) => {
-  const { response, status } = await ApiRequests?.addProduct(data);
-  return { res: response, status };
-});
+export const addProduct = createAsyncThunk(
+  "product/create",
+  async ({ data, storeId }) => {
+    const { response, status } = await ApiRequests?.addProduct(data, storeId);
+    return { res: response, status };
+  }
+);
 
-export const getProducts = createAsyncThunk("products/getStore", async () => {
-  const { response, status } = await ApiRequests?.getProducts();
-  return { res: response, status };
-});
+export const getProductsForAdmin = createAsyncThunk(
+  "products/getForStore",
+  async ({ storeId }) => {
+    const { response, status } = await ApiRequests?.getProductsForAdmin(
+      storeId
+    );
+    return { res: response, status };
+  }
+);
+
+export const deleteProduct = createAsyncThunk(
+  "products/deleteProduct",
+  async ({ storeId, productId }) => {
+    const { response, status } = await ApiRequests?.deleteProduct(
+      storeId,
+      productId
+    );
+    return { res: response, status };
+  }
+);
 
 const initialState = {
   products: [],
@@ -28,7 +47,7 @@ const productSlice = createSlice({
         state.loading = { bool: true, full: true, message: "Adding Product" };
       })
       .addCase(addProduct.fulfilled, (state, action) => {
-        state.loading = { bool: false, ...state.loading };
+        state.loading = { ...state.loading, bool: false };
         const isError = checkStatus(action.payload.status);
 
         if (isError) {
@@ -41,17 +60,17 @@ const productSlice = createSlice({
         }
       })
       .addCase(addProduct.rejected, (state, _) => {
-        state.loading = { bool: false, ...state.loading };
+        state.loading = { ...state.loading, bool: false };
       })
 
-      .addCase(getProducts.pending, (state, _) => {
+      .addCase(getProductsForAdmin.pending, (state, _) => {
         state.loading = {
           bool: true,
           full: false,
           message: "Fetching Product",
         };
       })
-      .addCase(getProducts.fulfilled, (state, action) => {
+      .addCase(getProductsForAdmin.fulfilled, (state, action) => {
         state.loading = {
           ...state.loading,
           bool: false,
@@ -67,8 +86,35 @@ const productSlice = createSlice({
           state.error = null;
         }
       })
-      .addCase(getProducts.rejected, (state, _) => {
+      .addCase(getProductsForAdmin.rejected, (state, _) => {
         state.loading = { bool: false, ...state.loading };
+      })
+
+      .addCase(deleteProduct.pending, (state, _) => {
+        state.loading = {
+          bool: true,
+          full: false,
+          message: "Deleting Product",
+        };
+      })
+      .addCase(deleteProduct.fulfilled, (state, action) => {
+        state.loading = {
+          ...state.loading,
+          bool: false,
+        };
+        const isError = checkStatus(action.payload.status);
+
+        if (isError) {
+          state.error = action.payload.res.message;
+          state.success = { ...state.success, bool: false };
+        } else {
+          state.products = action.payload.res.products;
+          state.success = { bool: true, type: "delete" };
+          state.error = null;
+        }
+      })
+      .addCase(deleteProduct.rejected, (state, _) => {
+        state.loading = { ...state.loading, bool: false };
       }),
 });
 

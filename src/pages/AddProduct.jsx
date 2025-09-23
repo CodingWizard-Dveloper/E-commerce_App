@@ -94,15 +94,14 @@ const CreateProduct = () => {
     formData.append("productImage", selectedImage);
     formData.append("totalProducts", data.totalProducts);
     formData.append("type", data.type);
-    formData.append("storeId", store?._id);
 
-    dispatch(addProduct(formData));
+    dispatch(addProduct({ data: formData, storeId: store?._id }));
   };
 
   useEffect(() => {
     if (success.bool && success.type === "create") {
       toast.success("Product Created");
-      navigate(-1)
+      navigate(-1);
     } else if (error) {
       toast.error(error);
     }

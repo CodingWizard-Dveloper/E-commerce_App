@@ -10,6 +10,7 @@ import {
   DollarSign,
   ChevronDown,
   Plus,
+  Trash,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuth } from "../../slice/auth.slice";
@@ -17,7 +18,7 @@ import { deleteStore, updateStore } from "../../slice/store.slice";
 import { toast } from "react-toastify";
 import Loader from "../ui/Loader";
 import { useNavigate } from "react-router-dom";
-import { getProducts } from "../../slice/product.slice";
+import { deleteProduct, getProductsForAdmin } from "../../slice/product.slice";
 
 // Helper to get default store values
 const getDefaultStoreValues = (store) => ({
@@ -29,12 +30,16 @@ const getDefaultStoreValues = (store) => ({
 
 const ManageStore = () => {
   const dispatch = useDispatch();
-  const { products, loading: productLoding } = useSelector(
-    (state) => state.product
+  const {
+    products,
+    loading: productLoding,
+    success: productSuccess,
+    error: productError,
+  } = useSelector((state) => state.product);
+  const { store, error, success, loading } = useSelector(
+    (state) => state.store
   );
-  const { store } = useSelector((state) => state.store);
   const { user } = useSelector((state) => state.auth);
-  const { error, success, loading } = useSelector((state) => state.store);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageChanged, setImageChanged] = useState(false);
   const navigate = useNavigate();
@@ -146,8 +151,20 @@ const ManageStore = () => {
   }, [error, success]);
 
   useEffect(() => {
-    dispatch(getProducts());
-  }, []);
+    if (store?._id) dispatch(getProductsForAdmin({ storeId: store?._id }));
+  }, [store?._id]);
+
+  const handleDelete = (productId) => {
+    dispatch(deleteProduct({ storeId: store?._id, productId }));
+  };
+
+  useEffect(() => {
+    if (productError) {
+      toast.error(productError);
+    } else if (productSuccess.bool && productSuccess.type === "delete") {
+      toast.success("Product deleted successfully");
+    }
+  }, [productError, productSuccess]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -159,7 +176,9 @@ const ManageStore = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-blue-50 rounded-lg p-4 text-center">
             <Package className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">0</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {products?.length}
+            </p>
             <p className="text-sm text-gray-600">Products</p>
           </div>
           <div className="bg-green-50 rounded-lg p-4 text-center">
@@ -182,7 +201,6 @@ const ManageStore = () => {
           <Loader message={loading.message} />
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* ...existing code for store update form... */}
             {/* Store Image Section */}
             <div className="flex flex-col gap-4">
               <label className="text-sm font-medium text-gray-700">
@@ -389,22 +407,16 @@ const ManageStore = () => {
                     </span>
                     <div className="flex gap-2">
                       <button
-                        className="px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-medium"
+                        className="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 font-medium flex justify-center"
+                        style={{
+                          alignItems: "center",
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/product/update/${product._id}`);
+                          handleDelete(product?._id);
                         }}
                       >
-                        Update
-                      </button>
-                      <button
-                        className="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs font-medium"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // TODO: dispatch delete product action here
-                        }}
-                      >
-                        Delete
+                        <Trash size={"16px"} /> <span>Delete </span>
                       </button>
                     </div>
                   </div>
