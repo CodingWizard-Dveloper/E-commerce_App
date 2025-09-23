@@ -35,6 +35,8 @@ const ManageStore = () => {
     loading: productLoding,
     success: productSuccess,
     error: productError,
+    totalProducts,
+    reveniue,
   } = useSelector((state) => state.product);
   const { store, error, success, loading } = useSelector(
     (state) => state.store
@@ -42,6 +44,8 @@ const ManageStore = () => {
   const { user } = useSelector((state) => state.auth);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageChanged, setImageChanged] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageLimit, setPageLimit] = useState(5);
   const navigate = useNavigate();
 
   // Memoize default values to avoid unnecessary resets
@@ -151,12 +155,47 @@ const ManageStore = () => {
   }, [error, success]);
 
   useEffect(() => {
-    if (store?._id) dispatch(getProductsForAdmin({ storeId: store?._id }));
-  }, [store?._id]);
+    if (store?._id) {
+      dispatch(
+        getProductsForAdmin({
+          storeId: store?._id,
+          page: currentPage,
+          limit: pageLimit,
+        })
+      );
+    }
+  }, [store?._id, currentPage, pageLimit]);
 
   const handleDelete = (productId) => {
-    dispatch(deleteProduct({ storeId: store?._id, productId }));
+    dispatch(
+      deleteProduct({
+        storeId: store?._id,
+        productId,
+        callBack: () =>
+          dispatch(
+            getProductsForAdmin({
+              storeId: store?._id,
+              page: currentPage,
+              limit: pageLimit,
+            })
+          ),
+      })
+    );
   };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleLimitChange = (newLimit) => {
+    setPageLimit(newLimit);
+    setCurrentPage(1); // Reset to first page when changing limit
+  };
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(totalProducts / pageLimit);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
 
   useEffect(() => {
     if (productError) {
@@ -176,9 +215,7 @@ const ManageStore = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-blue-50 rounded-lg p-4 text-center">
             <Package className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">
-              {products?.length}
-            </p>
+            <p className="text-2xl font-bold text-blue-600">{totalProducts}</p>
             <p className="text-sm text-gray-600">Products</p>
           </div>
           <div className="bg-green-50 rounded-lg p-4 text-center">
@@ -188,7 +225,7 @@ const ManageStore = () => {
           </div>
           <div className="bg-purple-50 rounded-lg p-4 text-center">
             <DollarSign className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-purple-600">$0</p>
+            <p className="text-2xl font-bold text-purple-600">${reveniue}</p>
             <p className="text-sm text-gray-600">Revenue</p>
           </div>
         </div>
@@ -427,6 +464,50 @@ const ManageStore = () => {
                 No products found.
               </div>
             )}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!productLoding.bool && products && products.length > 0 && (
+          <div className="flex justify-end items-center gap-3 mt-4 pt-4 border-t border-gray-200">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={!hasPrevPage}
+              className={`p-2 rounded-lg transition ${
+                hasPrevPage
+                  ? "text-gray-600 hover:bg-gray-100"
+                  : "text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              <ChevronDown className="h-4 w-4 rotate-90" />
+            </button>
+
+            <select
+              value={pageLimit}
+              onChange={(e) => handleLimitChange(Number(e.target.value))}
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={15}>15</option>
+              <option value={20}>20</option>
+            </select>
+
+            {/* <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span> */}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={!hasNextPage}
+              className={`p-2 rounded-lg transition ${
+                hasNextPage
+                  ? "text-gray-600 hover:bg-gray-100"
+                  : "text-gray-300 cursor-not-allowed"
+              }`}
+            >
+              <ChevronDown className="h-4 w-4 -rotate-90" />
+            </button>
           </div>
         )}
       </div>

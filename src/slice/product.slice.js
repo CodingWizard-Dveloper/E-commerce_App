@@ -4,29 +4,36 @@ import checkStatus from "../config/CheckStatus";
 
 export const addProduct = createAsyncThunk(
   "product/create",
-  async ({ data, storeId }) => {
+  async ({ data, storeId, callBack }) => {
     const { response, status } = await ApiRequests?.addProduct(data, storeId);
+
+    if (callBack) await callBack();
+
     return { res: response, status };
   }
 );
 
 export const getProductsForAdmin = createAsyncThunk(
   "products/getForStore",
-  async ({ storeId }) => {
+  async ({ storeId, callBack, page, limit }) => {
     const { response, status } = await ApiRequests?.getProductsForAdmin(
-      storeId
+      storeId,
+      page,
+      limit
     );
+    if (callBack) await callBack();
     return { res: response, status };
   }
 );
 
 export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
-  async ({ storeId, productId }) => {
+  async ({ storeId, productId, callBack }) => {
     const { response, status } = await ApiRequests?.deleteProduct(
       storeId,
       productId
     );
+    if (callBack) await callBack();
     return { res: response, status };
   }
 );
@@ -36,6 +43,8 @@ const initialState = {
   success: { bool: false, type: null },
   loading: { bool: true, message: "", full: false },
   error: null,
+  totalProducts: null,
+  reveniue: null,
 };
 
 const productSlice = createSlice({
@@ -54,7 +63,6 @@ const productSlice = createSlice({
           state.error = action.payload.res.message;
           state.success = { bool: false, ...state.success };
         } else {
-          state.products = action.payload.res.products;
           state.success = { bool: true, type: "create" };
           state.error = null;
         }
@@ -82,12 +90,14 @@ const productSlice = createSlice({
           state.success = { bool: false, ...state.success };
         } else {
           state.products = action.payload.res.products;
+          state.totalProducts = action.payload.res.totalProducts;
+          state.reveniue = action.payload.res.reveniue;
           state.success = { bool: true, type: "get" };
           state.error = null;
         }
       })
       .addCase(getProductsForAdmin.rejected, (state, _) => {
-        state.loading = { bool: false, ...state.loading };
+        state.loading = { ...state.loading, bool: false };
       })
 
       .addCase(deleteProduct.pending, (state, _) => {
@@ -108,7 +118,6 @@ const productSlice = createSlice({
           state.error = action.payload.res.message;
           state.success = { ...state.success, bool: false };
         } else {
-          state.products = action.payload.res.products;
           state.success = { bool: true, type: "delete" };
           state.error = null;
         }

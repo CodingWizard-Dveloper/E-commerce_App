@@ -47,8 +47,10 @@ const ApiRequests = {
     const response = await api.post(`/products/${storeId}`, data);
     return { response, status: response.status };
   },
-  getProductsForAdmin: async (storeId) => {
-    const response = await api.get(`/products/${storeId}`);
+  getProductsForAdmin: async (storeId, page, limit) => {
+    const response = await api.get(
+      `/products/${storeId}?limit=${limit}&page=${page}`
+    );
     return { response: response.data, status: response.status };
   },
   deleteProduct: async (storeId, productId) => {
