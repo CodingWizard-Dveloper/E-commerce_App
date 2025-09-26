@@ -14,7 +14,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { addProduct } from "../slice/product.slice";
+import { addProduct, getProductsForAdmin } from "../slice/product.slice";
 import Loader from "../components/ui/Loader";
 import { toast } from "react-toastify";
 
@@ -94,15 +94,22 @@ const CreateProduct = () => {
     formData.append("productImage", selectedImage);
     formData.append("totalProducts", data.totalProducts);
     formData.append("type", data.type);
+    formData.append("storeId", store?._id)
 
-    dispatch(addProduct({ data: formData, storeId: store?._id }));
+    dispatch(
+      addProduct({
+        data: formData,
+        callBack: () => dispatch(getProductsForAdmin({ page: 1, limit: 5 , storeId: store?._id})),
+      })
+    );
   };
 
   useEffect(() => {
     if (success.bool && success.type === "create") {
       toast.success("Product Created");
       navigate(-1);
-    } else if (error) {
+    } 
+    if (error) {
       toast.error(error);
     }
   }, [success, error]);

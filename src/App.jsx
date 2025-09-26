@@ -13,12 +13,16 @@ import { GuestRoute, PrivateRoute } from "./config/restrictRoute";
 import Layout from "./components/layout";
 import Home from "./pages/Home";
 import { getStore } from "./slice/store.slice";
+import { getAllProducts } from "./slice/globalProduct.slice";
 
 export default function App() {
   const dispatch = useDispatch();
   const { loading: userLoading, token } = useSelector((state) => state.auth);
   const { loading: storeLoading } = useSelector((state) => state.store);
   const { loading: productLoading } = useSelector((state) => state.product);
+  const { loading: UserproductLoading } = useSelector(
+    (state) => state.globalProducts
+  );
 
   useEffect(() => {
     dispatch(checkAuth());
@@ -38,15 +42,18 @@ export default function App() {
 
   if (storeLoading.bool && storeLoading.full)
     return showLoader(storeLoading?.message);
-  else if (userLoading.bool && userLoading.full) return showLoader(userLoading?.message);
+  else if (userLoading.bool && userLoading.full)
+    return showLoader(userLoading?.message);
   else if (productLoading.bool && productLoading.full)
     return showLoader(productLoading?.message);
+  else if (UserproductLoading.bool && UserproductLoading.full)
+    return showLoader(UserproductLoading?.message);
 
   return (
     <Layout>
       <ToastContainer />
       <Routes>
-        <Route index element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route
           path="/*"
           element={

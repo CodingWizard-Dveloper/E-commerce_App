@@ -200,7 +200,8 @@ const ManageStore = () => {
   useEffect(() => {
     if (productError) {
       toast.error(productError);
-    } else if (productSuccess.bool && productSuccess.type === "delete") {
+    }
+    if (productSuccess.bool && productSuccess.type === "delete") {
       toast.success("Product deleted successfully");
     }
   }, [productError, productSuccess]);

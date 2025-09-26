@@ -1,7 +1,18 @@
 import { Link } from "react-router-dom";
 import { ShoppingBag, Star } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { getAllProducts } from "../slice/globalProduct.slice";
+import Loader from "../components/ui/Loader";
+import { toast } from "react-toastify";
 
 export default function Home() {
+  const { products, loading, error } = useSelector(
+    (state) => state.globalProducts
+  );
+  const dispatch = useDispatch();
+  const [limit, setLimit] = useState(4);
+
   const category = [
     { name: "Electronics", img: "/categories/electronics.jpg" },
     { name: "Fashion", img: "/categories/fashion.jpg" },
@@ -11,36 +22,15 @@ export default function Home() {
     { name: "Sports", img: "/categories/sports.jpg" },
   ];
 
-  const products = [
-    {
-      id: 1,
-      name: "BoAt airdrop 131",
-      img: "/products/product-1.jpg",
-      rating: "4.2",
-      price: "25.00",
-    },
-    {
-      id: 2,
-      name: "Elixer perfume",
-      img: "/products/product-2.jpg",
-      rating: "4.0",
-      price: "30.00",
-    },
-    {
-      id: 3,
-      name: "It starts with us",
-      img: "/products/product-3.jpg",
-      rating: "4.5",
-      price: "40.00",
-    },
-    {
-      id: 4,
-      name: "CA pro 1000",
-      img: "/products/product-4.jpg",
-      rating: "4.8",
-      price: "50.00",
-    },
-  ];
+  useEffect(() => {
+    dispatch(getAllProducts({ limit }));
+  }, [dispatch, limit]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   return (
     <div className="bg-gray-100/50 min-h-screen">
@@ -104,39 +94,53 @@ export default function Home() {
       {/* Featured Products */}
       <section className="mx-auto max-w-7xl px-6 py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Featured Products
+          Recent Products
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="rounded-2xl bg-white shadow hover:shadow-lg transition p-4 flex flex-col"
-            >
-              <img
-                src={product.img}
-                alt={`${product.name}`}
-                className="h-40 w-full object-cover bg-center rounded-lg"
-              />
-              <h3 className="mt-4 font-semibold text-gray-900">
-                {product.name}
-              </h3>
-              <p className="text-gray-600 text-sm mt-1">
-                {product.desc || "Short product description goes here."}
-              </p>
-              <div className="mt-2 flex items-center gap-1 text-yellow-500">
-                <Star className="h-4 w-4 fill-yellow-500" /> {product.rating}
-              </div>
-              <div className="mt-auto flex items-center justify-between pt-4">
-                <span className="font-bold text-indigo-600">
-                  $ {product.price}
-                </span>
-                <button className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-white text-sm hover:bg-indigo-700 transition">
-                  <ShoppingBag className="h-4 w-4" /> Add
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {loading.bool ? (
+          <Loader />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <>
+              {(products ?? []).map((product) => (
+                <div
+                  key={product._id}
+                  className="rounded-2xl bg-white shadow hover:shadow-lg transition p-4 flex flex-col"
+                >
+                  <img
+                    src={product.productImage}
+                    alt={`${product.title}`}
+                    className="h-40 w-full object-cover bg-center rounded-lg"
+                  />
+                  <h3 className="mt-4 font-semibold text-gray-900">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {product.desc || "Short product description goes here."}
+                  </p>
+                  <div className="mt-2 flex items-center gap-1 text-yellow-500">
+                    <Star className="h-4 w-4 fill-yellow-500" />{" "}
+                    {product.rating || 0.0}
+                  </div>
+                  <div className="mt-auto flex items-center justify-between pt-4">
+                    <span className="font-bold text-indigo-600">
+                      $ {product.price}
+                    </span>
+                    <button className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-white text-sm hover:bg-indigo-700 transition">
+                      <ShoppingBag className="h-4 w-4" /> Add
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </>
+          </div>
+        )}
+        <button
+          onClick={() => setLimit((prev) => prev + 4)}
+          className="block mx-auto my-10 border-transparent bg-indigo-600 p-2 text-white cursor-pointer"
+          style={{ borderRadius: "5px" }}
+        >
+          Load More
+        </button>
       </section>
     </div>
   );

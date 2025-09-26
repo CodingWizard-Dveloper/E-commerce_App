@@ -43,18 +43,25 @@ const ApiRequests = {
     return { response, status: response.status };
   },
 
-  addProduct: async (data, storeId) => {
-    const response = await api.post(`/products/${storeId}`, data);
+  addProduct: async (data) => {
+    const response = await api.post(`/store/products/`, data);
     return { response, status: response.status };
   },
   getProductsForAdmin: async (storeId, page, limit) => {
     const response = await api.get(
-      `/products/${storeId}?limit=${limit}&page=${page}`
+      `/store/products/?limit=${limit}&page=${page}`
     );
     return { response: response.data, status: response.status };
   },
   deleteProduct: async (storeId, productId) => {
-    const response = await api.delete(`/products/${storeId}/${productId}`);
+    const response = await api.delete(
+      `/store/products/${storeId}/${productId}`
+    );
+    return { response: response.data, status: response.status };
+  },
+
+  getProductsAsUser: async (limit ) => {
+    const response = await api.get(`/products?limit=${limit}`);
     return { response: response.data, status: response.status };
   },
 };

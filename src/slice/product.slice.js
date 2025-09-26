@@ -4,8 +4,8 @@ import checkStatus from "../config/CheckStatus";
 
 export const addProduct = createAsyncThunk(
   "product/create",
-  async ({ data, storeId, callBack }) => {
-    const { response, status } = await ApiRequests?.addProduct(data, storeId);
+  async ({ data, callBack }) => {
+    const { response, status } = await ApiRequests?.addProduct(data);
 
     if (callBack) await callBack();
 
