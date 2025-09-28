@@ -11,10 +11,10 @@ import {
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { resetSignupFlag } from "../slice/auth.slice";
-import { createStore } from "../slice/store.slice";
+import { resetSignupFlag } from "../../slice/auth.slice";
+import { createStore } from "../../slice/store.slice";
 import { toast } from "react-toastify";
-import Loader from "../components/ui/Loader";
+import Loader from "../../components/ui/Loader";
 
 export default function CreateStore() {
   const dispatch = useDispatch();

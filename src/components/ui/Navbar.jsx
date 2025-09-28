@@ -15,8 +15,8 @@ import { logout } from "../../slice/auth.slice";
 
 const navigation = [
   { name: "Dashboard", href: "/" },
-  { name: "Shops", href: "/shops" },
   { name: "Products", href: "/products" },
+  { name: "Shops", href: "/shops" },
 ];
 
 function classNames(...classes) {

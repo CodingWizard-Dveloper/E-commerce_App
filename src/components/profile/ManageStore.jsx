@@ -416,7 +416,7 @@ const ManageStore = () => {
                 <div
                   key={product._id}
                   className="flex items-center gap-4 py-4 hover:bg-gray-50 transition cursor-pointer group"
-                  onClick={() => navigate(`/product/${product._id}`)}
+                  onClick={() => navigate(`/product/edit/${product._id}`)}
                 >
                   <img
                     src={
@@ -493,10 +493,6 @@ const ManageStore = () => {
               <option value={15}>15</option>
               <option value={20}>20</option>
             </select>
-
-            {/* <span className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
-            </span> */}
 
             <button
               onClick={() => handlePageChange(currentPage + 1)}

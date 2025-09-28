@@ -11,10 +11,23 @@ export const getAllProducts = createAsyncThunk(
   }
 );
 
+export const getProductById = createAsyncThunk(
+  "globalProducts/getById",
+  async ({ id, callBack }) => {
+    const { response, status } = await ApiRequests.getProductById(id);
+
+    if (callBack) callBack();
+
+    return { res: response, status };
+  }
+);
+
 const initialState = {
   products: [],
+  product: {},
   loading: { bool: true, message: "", full: null },
   error: null,
+  success: { bool: false, type: "" },
 };
 
 const globalProductSlice = createSlice({
@@ -34,7 +47,8 @@ const globalProductSlice = createSlice({
         const error = checkStatus(actions.payload.status);
 
         if (error) {
-          state.error = actions.payload.res.message ?? "Error Fetching products";
+          state.error =
+            actions.payload.res.message ?? "Error Fetching products";
         } else {
           state.products = actions.payload.res.products;
         }
@@ -45,6 +59,34 @@ const globalProductSlice = createSlice({
           bool: false,
         };
         state.error = "Error fetching products";
+      })
+
+      .addCase(getProductById.pending, (state, _) => {
+        state.loading = {
+          bool: true,
+          message: "Fetching Product",
+          full: false,
+        };
+      })
+      .addCase(getProductById.fulfilled, (state, actions) => {
+        state.loading = { ...state.loading, bool: false };
+        const error = checkStatus(actions.payload.status);
+
+        if (error) {
+          state.error =
+            actions.payload.res.message ?? "Error Fetching products";
+        } else {
+          state.product = actions.payload.res.product;
+          state.success = { bool: true, type: "get" };
+        }
+      })
+      .addCase(getProductById.rejected, (state, _) => {
+        state.loading = {
+          ...state.loading,
+          bool: false,
+        };
+        state.error = "Error fetching product";
+        state.success = { ...state.success, bool: false };
       }),
 });
 

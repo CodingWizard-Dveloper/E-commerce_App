@@ -1,5 +1,4 @@
 import api from "../config/axios";
-import { addProduct } from "../slice/product.slice";
 
 const ApiRequests = {
   checkAuth: async () => {
@@ -59,9 +58,20 @@ const ApiRequests = {
     );
     return { response: response.data, status: response.status };
   },
+  updateProduct: async ({ data, storeId, productId }) => {
+    const response = await api.patch(
+      `/store/products/${storeId}/${productId}`,
+      data
+    );
+    return { response: response.data, status: response.status };
+  },
 
-  getProductsAsUser: async (limit ) => {
+  getProductsAsUser: async (limit) => {
     const response = await api.get(`/products?limit=${limit}`);
+    return { response: response.data, status: response.status };
+  },
+  getProductById: async (id) => {
+    const response = await api.get(`/products/${id}`);
     return { response: response.data, status: response.status };
   },
 };

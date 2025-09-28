@@ -14,7 +14,7 @@ export function GuestRoute({ children }) {
   ) : justSignedUp ? (
     <Navigate to="/createstore" />
   ) : (
-    <Navigate to="/" />
+    <Navigate to={"/"} />
   );
 }
 

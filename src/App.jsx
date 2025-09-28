@@ -13,7 +13,7 @@ import { GuestRoute, PrivateRoute } from "./config/restrictRoute";
 import Layout from "./components/layout";
 import Home from "./pages/Home";
 import { getStore } from "./slice/store.slice";
-import { getAllProducts } from "./slice/globalProduct.slice";
+import Products from "./pages/Products";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -54,6 +54,7 @@ export default function App() {
       <ToastContainer />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
         <Route
           path="/*"
           element={

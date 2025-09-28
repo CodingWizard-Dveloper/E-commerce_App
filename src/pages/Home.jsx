@@ -11,7 +11,7 @@ export default function Home() {
     (state) => state.globalProducts
   );
   const dispatch = useDispatch();
-  const [limit, setLimit] = useState(4);
+  const limit = 4;
 
   const category = [
     { name: "Electronics", img: "/categories/electronics.jpg" },
@@ -24,7 +24,7 @@ export default function Home() {
 
   useEffect(() => {
     dispatch(getAllProducts({ limit }));
-  }, [dispatch, limit]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -93,9 +93,14 @@ export default function Home() {
 
       {/* Featured Products */}
       <section className="mx-auto max-w-7xl px-6 py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Recent Products
-        </h2>
+        <div className="flex justify-between align-middle">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Recent Products
+          </h2>
+          <h6 className="text-red-500">
+            <Link to={"/products"}> See All</Link>
+          </h6>
+        </div>
         {loading.bool ? (
           <Loader />
         ) : (
@@ -134,13 +139,6 @@ export default function Home() {
             </>
           </div>
         )}
-        <button
-          onClick={() => setLimit((prev) => prev + 4)}
-          className="block mx-auto my-10 border-transparent bg-indigo-600 p-2 text-white cursor-pointer"
-          style={{ borderRadius: "5px" }}
-        >
-          Load More
-        </button>
       </section>
     </div>
   );

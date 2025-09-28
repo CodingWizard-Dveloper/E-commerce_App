@@ -38,6 +38,19 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
+export const updateProduct = createAsyncThunk(
+  "products/update",
+  async ({ data, callBack, storeId, productId }) => {
+    const { response, status } = await ApiRequests?.updateProduct({
+      data,
+      productId,
+      storeId,
+    });
+    if (callBack) await callBack();
+    return { res: response, status };
+  }
+);
+
 const initialState = {
   products: [],
   success: { bool: false, type: null },
@@ -123,6 +136,32 @@ const productSlice = createSlice({
         }
       })
       .addCase(deleteProduct.rejected, (state, _) => {
+        state.loading = { ...state.loading, bool: false };
+      })
+
+      .addCase(updateProduct.pending, (state, _) => {
+        state.loading = {
+          bool: true,
+          full: true,
+          message: "Updating Product",
+        };
+      })
+      .addCase(updateProduct.fulfilled, (state, action) => {
+        state.loading = {
+          ...state.loading,
+          bool: false,
+        };
+        const isError = checkStatus(action.payload.status);
+
+        if (isError) {
+          state.error = action.payload.res.message;
+          state.success = { ...state.success, bool: false };
+        } else {
+          state.success = { bool: true, type: "update" };
+          state.error = null;
+        }
+      })
+      .addCase(updateProduct.rejected, (state, _) => {
         state.loading = { ...state.loading, bool: false };
       }),
 });
