@@ -14,7 +14,7 @@ const ApiRequests = {
 
     return { response, status: response.status };
   },
-  changeUser: async (data) => {
+  editUser: async (data) => {
     const response = await api.patch("/auth/", data);
 
     return { response, status: response.status };

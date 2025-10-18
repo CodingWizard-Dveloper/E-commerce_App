@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   User,
   Mail,
@@ -10,7 +10,7 @@ import {
   Image,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useState, useRef } from "react";
 import { checkAuth, signup } from "../slice/auth.slice";
 
@@ -97,7 +97,7 @@ export default function Signup() {
       formData.append("profileImage", selectedImage); // backend should expect this key
     }
 
-    dispatch(signup({ data: formData }));
+    dispatch(signup({ data: formData, callBack: () => dispatch(checkAuth()) }));
   };
 
   return (

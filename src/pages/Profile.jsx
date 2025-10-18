@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User2Icon } from "lucide-react";
 import { useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import Orders from "../components/profile/Orders";
 import Wishlist from "../components/profile/Wishlist";
 import Settings from "../components/profile/Settings";
 import ManageStore from "../components/profile/ManageStore";
 
 export default function Profile() {
-  const { tab } = useParams();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab");
   const [activeTab, setActiveTab] = useState(tab ?? "orders");
   const { user: defaultUser } = useSelector((state) => state.auth);
 
@@ -42,6 +43,14 @@ export default function Profile() {
       component: (key) => <ManageStore key={key} />,
     });
   }
+
+  useEffect(() => {
+    const validTabs = userTabs.map((t) => t.id);
+    if (!validTabs.includes(tab)) {
+      setParams({ tab: "orders" });
+    }
+    // eslint-disable-next-line
+  }, [tab, userTabs]);
 
   return (
     <div className="bg-gray-100/50 min-h-screen">
@@ -82,7 +91,7 @@ export default function Profile() {
       <section className="mx-auto max-w-7xl mt-6 flex">
         <div className="flex space-x-2 border-b w-full">
           {userTabs.map((tab) => (
-            <Link to={`/profile/${tab.id}`} key={tab.id}>
+            <Link to={`/profile/?tab=${tab.id}`} key={tab.id}>
               <button
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-6 py-2 rounded-t-lg font-semibold transition cursor-pointer ${

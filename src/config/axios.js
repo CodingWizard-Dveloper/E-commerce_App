@@ -12,8 +12,12 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.accessToken = `Bearer ${token}`;
+    }
+    if (refreshToken) {
+      config.headers.refreshToken = refreshToken;
     }
 
     if (config.data instanceof FormData) {
@@ -32,7 +36,7 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -43,9 +47,27 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Add a response interceptor to handle errors globally
+// Add a response interceptor to handle errors globally and automatic token refresh
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Check for new tokens in response headers (from middleware)
+    const newAccessToken = response.headers["access-token"];
+    const newRefreshToken = response.headers["refresh-token"];
+
+    // Only update tokens if both are present
+    if (newAccessToken && newRefreshToken) {
+      try {
+        localStorage.setItem("token", newAccessToken);
+        localStorage.setItem("refreshToken", newRefreshToken);
+
+        console.log("Tokens automatically refreshed from middleware");
+      } catch (storageError) {
+        console.warn("Failed to update tokens in localStorage:", storageError);
+      }
+    }
+
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -55,12 +77,20 @@ api.interceptors.response.use(
         // If we're already refreshing, queue this request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then((token) => {
+            if (token) {
+              originalRequest.headers.accessToken = `Bearer ${token}`;
+              const refreshToken = localStorage.getItem("refreshToken");
+              if (refreshToken) {
+                originalRequest.headers.refreshToken = refreshToken;
+              }
+            }
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
@@ -68,6 +98,7 @@ api.interceptors.response.use(
 
       const refreshToken = localStorage.getItem("refreshToken");
 
+      // Only try to refresh if we have a refresh token
       if (refreshToken) {
         try {
           // Create a new axios instance to avoid interceptor recursion
@@ -76,7 +107,9 @@ api.interceptors.response.use(
             headers: { "Content-Type": "application/json" },
           });
 
-          const response = await refreshApi.post("/auth/refresh", { refreshToken });
+          const response = await refreshApi.post("/auth/refresh", {
+            refreshToken,
+          });
 
           if (response.data.token) {
             const newToken = response.data.token;
@@ -86,9 +119,9 @@ api.interceptors.response.use(
             localStorage.setItem("token", newToken);
             localStorage.setItem("refreshToken", newRefreshToken);
 
-            // Update the authorization header
-            api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            // Update the request headers for retry
+            originalRequest.headers.accessToken = `Bearer ${newToken}`;
+            originalRequest.headers.refreshToken = newRefreshToken;
 
             processQueue(null, newToken);
 
@@ -98,7 +131,7 @@ api.interceptors.response.use(
         } catch (refreshError) {
           processQueue(refreshError, null);
 
-          // Refresh failed, remove tokens and redirect to login
+          // Refresh failed, remove tokens
           localStorage.removeItem("token");
           localStorage.removeItem("refreshToken");
 
@@ -110,9 +143,14 @@ api.interceptors.response.use(
           isRefreshing = false;
         }
       } else {
-        // No refresh token available
+        // No refresh token available, clear any remaining tokens
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
+
+        processQueue(new Error("No refresh token available"), null);
+        isRefreshing = false;
+
+        // You can dispatch a logout action here if using Redux
         // window.location.href = '/login';
       }
     }
@@ -122,7 +160,9 @@ api.interceptors.response.use(
 
     // Return a properly structured error response
     return Promise.resolve({
-      data: error?.response?.data || { message: error?.message || "Unknown error" },
+      data: error?.response?.data || {
+        message: error?.message || "Unknown error",
+      },
       status: error?.response?.status || 500,
       statusText: error?.response?.statusText || "Error",
     });

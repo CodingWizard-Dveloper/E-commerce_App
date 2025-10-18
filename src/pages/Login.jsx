@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Mail, Lock, AlertCircle, Handshake } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../slice/auth.slice";
+import { checkAuth, login } from "../slice/auth.slice";
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -16,7 +16,7 @@ export default function Login() {
   const { email: emailError, password: passwordError } = errors;
 
   const onSubmit = async (data) => {
-    dispatch(login({ data }));
+    dispatch(login({ data, callBack: ()=> dispatch(checkAuth()) }));
   };
 
   return (

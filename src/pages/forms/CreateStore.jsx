@@ -11,7 +11,7 @@ import {
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useRef, useEffect } from "react";
-import { resetSignupFlag } from "../../slice/auth.slice";
+import { checkAuth, resetSignupFlag } from "../../slice/auth.slice";
 import { createStore } from "../../slice/store.slice";
 import { toast } from "react-toastify";
 import Loader from "../../components/ui/Loader";
@@ -100,7 +100,7 @@ export default function CreateStore() {
     formData.append("ownerId", user?._id);
     formData.append("type", data?.storeType);
 
-    dispatch(createStore({ data: formData }));
+    dispatch(createStore({ data: formData, callBack: ()=> dispatch(checkAuth()) }));
   };
 
   useEffect(() => {

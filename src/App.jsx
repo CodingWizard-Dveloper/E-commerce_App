@@ -17,7 +17,9 @@ import Products from "./pages/Products";
 
 export default function App() {
   const dispatch = useDispatch();
-  const { loading: userLoading, token } = useSelector((state) => state.auth);
+  const {
+    loading: userLoading,
+  } = useSelector((state) => state.auth);
   const { loading: storeLoading } = useSelector((state) => state.store);
   const { loading: productLoading } = useSelector((state) => state.product);
   const { loading: UserproductLoading } = useSelector(
@@ -27,7 +29,7 @@ export default function App() {
   useEffect(() => {
     dispatch(checkAuth());
     dispatch(getStore());
-  }, [dispatch, token]);
+  }, []);
 
   const showLoader = (message) => {
     return (

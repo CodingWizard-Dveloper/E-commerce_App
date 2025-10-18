@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Camera, X, User2Icon, LogOut } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { changeUser, checkAuth, logout } from "../../slice/auth.slice";
+import { checkAuth, editUser, logout } from "../../slice/auth.slice";
 import { toast } from "react-toastify";
 import Loader from "../ui/Loader";
 
@@ -91,8 +91,9 @@ const Settings = () => {
     formData.append("profileImage", selectedFile ?? user?.avatar);
 
     dispatch(
-      changeUser({
+      editUser({
         data: formData,
+        callBack: () => dispatch(checkAuth()),
       })
     );
   };
@@ -112,8 +113,9 @@ const Settings = () => {
     // Don't include profile image in password change
 
     dispatch(
-      changeUser({
+      editUser({
         data: formData,
+        callBack: () => dispatch(checkAuth()),
       })
     );
   };

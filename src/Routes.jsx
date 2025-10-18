@@ -11,7 +11,6 @@ const AppRoutes = () => {
   const { user } = useSelector((state) => state.auth);
   return (
     <Routes>
-      <Route path="/profile/:tab" element={<Profile />} />
       <Route path="/profile/" element={<Profile />} />
 
       {user?.storeId ? (

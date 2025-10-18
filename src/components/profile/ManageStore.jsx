@@ -140,7 +140,8 @@ const ManageStore = () => {
           storeId: store?._id,
           callBack: () => dispatch(checkAuth()),
         })
-      );
+      )
+      .then(()=> navigate("/"))
       reset(getDefaultStoreValues(store));
     }
   };

@@ -8,22 +8,26 @@ export const checkAuth = createAsyncThunk("Auth/checkAuth", async () => {
   return { res: response.data, status };
 });
 
-export const login = createAsyncThunk("Auth/login", async ({ data }) => {
+export const login = createAsyncThunk("Auth/login", async ({ data, callBack }) => {
   const { response, status } = await ApiRequests.login({ ...data });
 
+  if (callBack) callBack()
+
   return { res: response.data, status };
 });
 
-export const signup = createAsyncThunk("Auth/singup", async ({ data }) => {
+export const signup = createAsyncThunk("Auth/singup", async ({ data, callBack }) => {
   const { response, status } = await ApiRequests.signup(data);
 
+  if (callBack) callBack()
+
   return { res: response.data, status };
 });
 
-export const changeUser = createAsyncThunk(
-  "Auth/changeUser",
+export const editUser = createAsyncThunk(
+  "Auth/editUser",
   async ({ data }) => {
-    const { response, status } = await ApiRequests.changeUser(data);
+    const { response, status } = await ApiRequests.editUser(data);
 
     return { res: response.data, status };
   }
@@ -94,7 +98,8 @@ const authSlice = createSlice({
         const isError = checkStatus(action.payload.status);
         state.loading = { ...state.loading, bool: false };
 
-        if (!isError && action.payload.res.token) {
+        if (!isError && action.payload.res) {
+          console.log("🚀 ~ action.payload.res:", action.payload.res);
           // Login successful
           state.success = true;
           state.user = action.payload.res.user;
@@ -102,7 +107,6 @@ const authSlice = createSlice({
           state.token = action.payload.res.token;
           state.justSignedUp = false; // Reset signup flag for login
           localStorage.setItem("token", action.payload.res.token);
-          // Store refresh token if provided
           if (action.payload.res.refreshToken) {
             localStorage.setItem(
               "refreshToken",
@@ -138,10 +142,10 @@ const authSlice = createSlice({
         }
       })
 
-      .addCase(changeUser.pending, (state, _) => {
+      .addCase(editUser.pending, (state, _) => {
         state.loading = { bool: true, message: "Updating user", full: false };
       })
-      .addCase(changeUser.fulfilled, (state, action) => {
+      .addCase(editUser.fulfilled, (state, action) => {
         state.loading = { ...state.loading, bool: false };
         const isError = checkStatus(action.payload.status);
 

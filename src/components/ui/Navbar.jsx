@@ -31,7 +31,7 @@ export default function Navbar() {
 
   const userActions = [
     { name: "Your Profile", href: "/profile" },
-    { name: "Settings", href: "/profile/settings" },
+    { name: "Settings", href: "/profile/?tab=settings" },
     { name: "Logout", fn: () => dispatch(logout()) },
   ];
 
@@ -40,7 +40,7 @@ export default function Navbar() {
   } else {
     userActions.splice(1, 0, {
       name: "Manage Store",
-      href: "/profile/ManageStore",
+      href: "/profile/?tab=ManageStore",
     });
   }
 

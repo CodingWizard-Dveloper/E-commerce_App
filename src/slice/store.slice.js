@@ -4,8 +4,10 @@ import checkStatus from "../config/CheckStatus";
 
 export const createStore = createAsyncThunk(
   "Store/CreateStore",
-  async ({ data }) => {
+  async ({ data, callBack }) => {
     const { response, status } = await ApiRequests.createStore(data);
+
+    if (callBack) callBack();
 
     return { res: response.data, status };
   }
@@ -18,7 +20,7 @@ export const deleteStore = createAsyncThunk(
       storeId: data.storeId,
     });
 
-    if (data.callBack && response) data.callBack();
+    if (data.callBack) data.callBack();
 
     return { res: response.data, status };
   }
@@ -84,15 +86,17 @@ const storeSlice = createSlice({
           state.error = null;
         } else {
           state.success = { type: "create", bool: false };
-          state.error = action.payload.res.message || "Signup failed";
+          state.error = action.payload.res.message || "Error creating Store";
         }
       })
       .addCase(createStore.rejected, (state, _) => {
         state.loading = { ...state.loading, bool: false };
+        state.success = { type: "create", bool: false };
+        state.error = action.payload.res.message || "Error creating Store";
       })
 
       .addCase(deleteStore.pending, (state, _) => {
-        state.loading = { bool: true, message: "Deleting store" };
+        state.loading = { bool: true, message: "Deleting store", full: true };
       })
       .addCase(deleteStore.fulfilled, (state, action) => {
         state.loading = { ...state.loading, bool: false };
